@@ -1,0 +1,29 @@
+# ── 안드로이드 ────────────────────────────────
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.iml
+.cxx/
+
+# ── 서명 키 (절대 올리면 안 됨) ──────────────────
+*.jks
+*.keystore
+keystore.properties
+
+# ── 서버 ─────────────────────────────────────
+server/node_modules/
+server/.wrangler/
+server/migrate.sql
+.dev.vars
+
+# ── 배포물 ───────────────────────────────────
+dist/
+*.apk
+*.aab
+
+# ── 기타 ─────────────────────────────────────
+.DS_Store
+.proj-build.tgz

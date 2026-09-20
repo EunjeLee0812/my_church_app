@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EBF1DE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="교회 묵상 기록과 나눔">
+<title>묵상 나눔광장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;800&family=Gowun+Batang:wght@400;700&display=swap">
+
+<style>
+:root{
+  --fs: 20px;
+
+  --bg:        #EBF1DE;
+  --bg-deep:   #DFE8CB;
+  --surface:   #FFFFFF;
+  --ink:       #23291C;
+  --ink-mid:   #55604A;
+  --ink-soft:  #7B856F;
+  --line:      #CFDAB6;
+  --line-soft: #E2EAD2;
+  --leaf:      #3D7A1F;
+  --leaf-deep: #2C5A13;
+  --leaf-pale: #E7F0D8;
+  --coal:      #33382D;
+  --warn:      #96301F;
+
+  --r: 14px;
+  --shadow: 0 1px 0 #CFDAB6, 0 2px 10px rgba(48,62,32,.07);
+}
+
+*{box-sizing:border-box}
+html{font-size:var(--fs)}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Gothic A1','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  font-size:1rem;
+  line-height:1.65;
+  -webkit-text-size-adjust:100%;
+}
+img{max-width:100%}
+[hidden]{display:none!important}
+h1,h2,h3{font-family:'Gowun Batang','Apple SD Gothic Neo',serif;font-weight:700;margin:0;text-wrap:balance;line-height:1.35}
+button{font:inherit;font-family:inherit;color:inherit;cursor:pointer}
+a{color:var(--leaf-deep)}
+:focus-visible{outline:3px solid var(--leaf);outline-offset:3px}
+
+.wrap{max-width:34rem;margin:0 auto;padding-inline:16px;padding-block:0 3rem}
+
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);border-bottom:2px solid var(--line);
+  margin-inline:-16px;padding:.5rem 16px;
+  display:flex;align-items:center;gap:.5rem;
+}
+.topbar .spacer{flex:1}
+/* 위쪽 막대는 글씨 크기를 키워도 그대로 — 화면 밖으로 밀리지 않게 */
+.navbtn{
+  border:2px solid var(--line);background:var(--surface);
+  border-radius:10px;padding:6px 10px;font-weight:700;font-size:13px;line-height:1.2;white-space:nowrap;
+}
+.fsgroup{display:flex;align-items:center;gap:4px}
+.fslabel{font-size:11px;color:var(--ink-soft);letter-spacing:.04em;font-weight:700;white-space:nowrap}
+.fsbtn{
+  border:2px solid var(--line);background:var(--surface);border-radius:9px;
+  width:34px;height:34px;line-height:1;display:grid;place-items:center;font-weight:800;padding:0;
+}
+.fsbtn[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf-deep);color:#fff}
+.fsbtn.s1{font-size:11px} .fsbtn.s2{font-size:14px} .fsbtn.s3{font-size:18px}
+
+.card{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.eyebrow{font-size:.75rem;letter-spacing:.14em;font-weight:800;color:var(--ink-soft)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.bigbtn{
+  display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  width:100%;text-align:left;text-decoration:none;
+  background:var(--surface);border:2px solid var(--line);border-radius:var(--r);
+  padding:1rem 1.1rem;font-weight:800;font-size:1.1rem;color:var(--ink);
+  box-shadow:var(--shadow);min-height:4rem;
+}
+.bigbtn .sub{display:block;font-size:.76rem;font-weight:400;color:var(--ink-mid);letter-spacing:0}
+.bigbtn .chev{color:var(--leaf);font-weight:800;flex:none}
+.bigbtn.solid{background:var(--leaf);border-color:var(--leaf-deep);color:#fff}
+.bigbtn.solid .sub{color:#DCEBC9}
+.bigbtn.solid .chev{color:#fff}
+
+.btn{border:2px solid var(--line);background:var(--surface);border-radius:11px;padding:.6rem 1rem;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--leaf);border-color:var(--leaf-deep);color:#fff}
+.btn.wide{width:100%;padding:.95rem 1rem;font-size:1.05rem;font-weight:800}
+.btn.danger{border-color:#E0BCB5;color:var(--warn)}
+.btn.small{padding:.4rem .7rem;font-size:.8rem}
+.btn:disabled{opacity:.45;cursor:default}
+
+label.fld{display:block;margin-bottom:1rem}
+label.fld > span{display:block;font-weight:700;font-size:.86rem;margin-bottom:.35rem}
+input[type=text],input[type=date],input[type=password],textarea{
+  font:inherit;font-family:inherit;width:100%;
+  border:2px solid var(--line);border-radius:11px;background:#FCFDF9;color:var(--ink);padding:.7rem .8rem;
+}
+textarea{resize:vertical;min-height:11rem;line-height:1.7}
+.note{font-size:.78rem;color:var(--ink-mid);margin:.35rem 0 0}
+.err{font-size:.85rem;color:var(--warn);font-weight:700;margin:.5rem 0 0}
+.err:empty{display:none}
+
+.chip{
+  display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.04em;
+  border:2px solid var(--line);border-radius:999px;padding:.05rem .5rem;color:var(--ink-mid);
+  background:var(--bg-deep);vertical-align:middle;
+}
+
+.hero{padding:1.6rem 0 1.1rem}
+.hero h1{font-size:1.95rem;letter-spacing:-.01em}
+.hero p{margin:.45rem 0 0;color:var(--ink-mid);font-size:.92rem}
+
+.whoami{padding:1rem 1.1rem;margin-bottom:.85rem}
+.whoami .row{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap}
+.whoami .nm{font-family:'Gowun Batang',serif;font-weight:700;font-size:1.45rem}
+.menu{display:flex;flex-direction:column;gap:.75rem}
+
+/* 나의 묵상 진도 */
+.prog{padding:1rem 1.1rem;margin-block:1.1rem}
+.prog h2{font-size:1.15rem}
+.prog .lock{font-size:.72rem;color:var(--ink-soft);font-weight:600;margin:.15rem 0 .9rem}
+.prow + .prow{margin-top:.85rem}
+.prow .top{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;font-size:.82rem}
+.prow .top b{font-weight:800;font-size:.95rem}
+.prow .top .of{color:var(--ink-mid);font-weight:400;font-size:.76rem}
+.bar{height:12px;border-radius:999px;background:var(--leaf-pale);margin-top:.3rem;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--leaf);border-radius:999px}
+.prow.year .top b{color:var(--leaf-deep)}
+.prow.year .bar i{background:var(--leaf-deep)}
+
+/* 출석표 */
+.person{padding:1rem 1.1rem;margin-bottom:.85rem}
+.person .head{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem;margin-bottom:.7rem}
+.person .namebtn{
+  border:0;background:transparent;padding:0;text-align:left;
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:1.3rem;
+  text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;text-decoration-color:var(--line);
+}
+.person .counts{
+  flex:none;font-size:.74rem;color:var(--ink-mid);line-height:1.5;
+  display:grid;grid-template-columns:auto auto;column-gap:.5rem;align-items:baseline;
+}
+.person .counts b{font-size:.95rem;color:var(--ink);font-weight:800;text-align:right}
+
+.gridscroll{overflow-x:auto;padding-bottom:.2rem}
+.grid{display:flex;align-items:flex-start;gap:14px;width:max-content}
+.dowcol{display:grid;grid-template-rows:repeat(7,13px);gap:4px;margin-top:20px;flex:none}
+.dow{font-size:9px;line-height:13px;color:var(--ink-soft);font-weight:700;font-family:'Gothic A1',sans-serif}
+.mgroup{flex:none}
+.mlabel{
+  display:block;width:100%;border:0;background:transparent;padding:0 0 6px;
+  font-size:11px;line-height:14px;font-weight:800;letter-spacing:.03em;color:var(--ink-mid);
+  text-align:left;font-family:'Gothic A1',sans-serif;cursor:pointer;
+}
+.mlabel:hover{color:var(--leaf-deep)}
+.weeks{display:flex;gap:4px}
+.week{display:grid;grid-template-rows:repeat(7,13px);gap:4px}
+.d{width:13px;height:13px;border-radius:50%;background:var(--coal)}
+.d.on{background:var(--leaf)}
+.d.future{background:transparent;box-shadow:inset 0 0 0 2px var(--line-soft)}
+.d.blank{background:transparent}
+.legend{display:flex;align-items:center;gap:.9rem;margin-top:.75rem;font-size:.72rem;color:var(--ink-mid);flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:.3rem}
+.legend i.fu{box-shadow:inset 0 0 0 2px var(--line-soft)}
+
+/* 오늘의 나눔 */
+.daybar{padding:.85rem .9rem;margin-bottom:1.1rem;text-align:center}
+.daybar .dt{font-family:'Gowun Batang',serif;font-weight:700;font-size:1.15rem;display:block}
+.daybar .cnt{font-size:.74rem;color:var(--ink-mid);display:block;min-height:1.2em}
+.daybar .nav{display:flex;gap:.5rem;justify-content:space-between;margin-top:.6rem}
+
+.feed{padding:1rem 1.1rem;margin-bottom:.85rem}
+.feed .who{font-family:'Gowun Batang',serif;font-weight:700;font-size:1.2rem}
+.feed h3{font-size:1.1rem;margin:.35rem 0 .45rem}
+.feed .body{white-space:pre-wrap;font-size:.96rem}
+.acts{display:flex;gap:.5rem;margin-top:.9rem;padding-top:.8rem;border-top:2px solid var(--line-soft);flex-wrap:wrap}
+.likebtn[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf-deep);color:#fff}
+.cbox{margin-top:.8rem;border-top:2px solid var(--line-soft);padding-top:.8rem}
+.cmt{padding:.5rem 0;border-bottom:1px solid var(--line-soft)}
+.cmt:last-of-type{border-bottom:0}
+.cmt .cwho{font-weight:800;font-size:.84rem}
+.cmt .cbody{font-size:.9rem;white-space:pre-wrap}
+.cmt .cdel{font-size:.72rem;color:var(--warn);background:none;border:0;padding:0;text-decoration:underline}
+.cform{display:flex;gap:.5rem;margin-top:.7rem}
+.cform input{flex:1;padding:.55rem .7rem;font-size:.9rem}
+
+/* 기록 목록 */
+.entry{padding:1rem 1.1rem;margin-bottom:.8rem}
+.entry .when{font-size:.8rem;font-weight:800;color:var(--leaf-deep);letter-spacing:.02em}
+.entry h3{font-size:1.2rem;margin:.2rem 0 .5rem}
+.entry .body{white-space:pre-wrap;font-size:.98rem;color:var(--ink)}
+.entry .tools{display:flex;gap:.5rem;margin-top:.9rem;padding-top:.8rem;border-top:2px solid var(--line-soft);flex-wrap:wrap;align-items:center}
+.monthrule{display:flex;align-items:center;gap:.6rem;margin:1.4rem 0 .7rem;
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:1.05rem;color:var(--ink-mid)}
+.monthrule::after{content:"";flex:1;height:2px;background:var(--line)}
+
+.filters{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1.1rem}
+.filters .lbl{font-size:.78rem;font-weight:700;color:var(--ink-mid)}
+.filters select{font:inherit;font-family:inherit;font-size:.9rem;font-weight:700;
+  border:2px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink);padding:.5rem .6rem}
+.filters .hits{margin-left:auto;font-size:.78rem;color:var(--ink-mid)}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.seg button{border:2px solid var(--line);background:var(--surface);border-radius:11px;
+  padding:.7rem .5rem;font-weight:700;font-size:.88rem;line-height:1.3}
+.seg button[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf-deep);color:#fff}
+.seg button .sub{display:block;font-size:.7rem;font-weight:400;opacity:.85}
+
+.empty{padding:2rem 1.2rem;text-align:center;color:var(--ink-mid)}
+.empty b{display:block;font-family:'Gowun Batang',serif;font-size:1.15rem;color:var(--ink);margin-bottom:.4rem}
+
+.sectitle{font-size:1.5rem;margin:1.5rem 0 .3rem}
+.secsub{color:var(--ink-mid);font-size:.85rem;margin:0 0 1.1rem}
+
+.suggest{padding:1rem 1.1rem;margin-block:1.1rem}
+.suggest h2{font-size:1.15rem}
+.suggest textarea{min-height:5.5rem;margin-top:.7rem}
+.okmsg{font-size:.85rem;color:var(--leaf-deep);font-weight:700;margin:.5rem 0 0}
+
+.sug{padding:1rem 1.1rem;margin-bottom:.8rem}
+.sug.unread{border-color:var(--leaf);border-width:3px}
+.sug .top{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;font-size:.8rem;color:var(--ink-mid)}
+.sug .top b{font-size:.95rem;color:var(--ink);font-weight:800}
+.sug .body{white-space:pre-wrap;font-size:.96rem;margin-top:.45rem}
+.sug .tools{display:flex;gap:.5rem;margin-top:.9rem;padding-top:.8rem;
+  border-top:2px solid var(--line-soft);flex-wrap:wrap;align-items:center}
+
+.banner{background:#F6EFDC;border:2px solid #E3D5AE;border-radius:var(--r);
+  padding:.75rem .9rem;font-size:.8rem;color:#6A5718;margin-bottom:1rem;
+  display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+.banner .btn{background:#fff;border-color:#D9C9A0;font-size:.78rem;padding:.4rem .7rem}
+
+@media (prefers-reduced-motion:no-preference){
+  .view{animation:fade .18s ease-out}
+  @keyframes fade{from{opacity:.55}to{opacity:1}}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar">
+    <button class="navbtn" id="backBtn" hidden>&lt; 뒤로가기</button>
+    <button class="navbtn" id="homeBtn" hidden>홈으로</button>
+    <span class="spacer"></span>
+    <span class="fslabel">글씨 크기</span>
+    <div class="fsgroup" role="group" aria-label="글씨 크기 조절">
+      <button class="fsbtn s1" id="fs1" aria-pressed="false" aria-label="보통">가</button>
+      <button class="fsbtn s2" id="fs2" aria-pressed="true" aria-label="크게">가</button>
+      <button class="fsbtn s3" id="fs3" aria-pressed="false" aria-label="아주 크게">가</button>
+    </div>
+  </div>
+  <main id="main"></main>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   설정
+   ============================================================ */
+const SUPABASE_URL = "https://vadzwqrlsjatogxrmony.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZHp3cXJsc2phdG9neHJtb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNzQxNjksImV4cCI6MjEwNDk1MDE2OX0.dRO0w8iOvb53UGdZzJJO4ihhxW2SsoHUpWjQv0s33Lg";
+
+const ZOOM_NO   = "4073168199";
+const ZOOM_WEB  = "https://us02web.zoom.us/j/" + ZOOM_NO;
+const BIBLE_URL = "https://sum.su.or.kr:8888/bible/today";
+const MAX_BODY  = 3000;
+const DOW = ["일","월","화","수","목","금","토"];
+
+/* ============================================================
+   저장소 — Supabase 와 오가는 곳은 여기가 전부입니다
+   ============================================================ */
+const HEAD = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
+
+async function rpc(fn, args){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, {
+    method:"POST",
+    headers: Object.assign({ "Content-Type":"application/json" }, HEAD),
+    body: JSON.stringify(args || {}),
+  });
+  if (!r.ok) throw new Error("rpc " + fn + " " + r.status + " " + (await r.text()));
+  return r.json();
+}
+async function sel(q){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/" + q, { headers: HEAD });
+  if (!r.ok) throw new Error("select " + r.status + " " + (await r.text()));
+  return r.json();
+}
+
+const store = {
+  plaza       : ()                   => rpc("plaza"),
+  feed        : (date, hex)          => rpc("feed", { p_date:date, p_hex:hex || null }),
+  progress    : (hex, pin)           => rpc("my_progress", { p_hex:hex, p_pin_hash:pin }),
+  claimName   : (hex, name, pin)     => rpc("claim_name", { p_hex:hex, p_name:name, p_pin_hash:pin }),
+  saveEntry   : (hex, pin, date, title, body, isPublic, oldDate) =>
+                  rpc("save_entry", { p_hex:hex, p_pin_hash:pin, p_date:date, p_title:title,
+                                      p_body:body, p_is_public:isPublic, p_old_date:oldDate || null }),
+  deleteEntry : (hex, pin, date)     => rpc("delete_entry", { p_hex:hex, p_pin_hash:pin, p_date:date }),
+  myEntries   : (hex, pin)           => rpc("my_entries", { p_hex:hex, p_pin_hash:pin }),
+  toggleLike  : (hex, pin, eHex, eDate) =>
+                  rpc("toggle_like", { p_hex:hex, p_pin_hash:pin, p_entry_hex:eHex, p_entry_date:eDate }),
+  addComment  : (hex, pin, eHex, eDate, body) =>
+                  rpc("add_comment", { p_hex:hex, p_pin_hash:pin, p_entry_hex:eHex, p_entry_date:eDate, p_body:body }),
+  delComment  : (hex, pin, id)       => rpc("delete_comment", { p_hex:hex, p_pin_hash:pin, p_id:id }),
+  comments    : (eHex, eDate)        =>
+                  sel("comments_public?entry_hex=eq." + encodeURIComponent(eHex) +
+                      "&entry_date=eq." + eDate + "&select=id,hex,name,body,created_at&order=created_at.asc"),
+  addSuggestion  : (hex, pin, body)   => rpc("add_suggestion",      { p_hex:hex, p_pin_hash:pin, p_body:body }),
+  amIAdmin       : (hex, pin)         => rpc("am_i_admin",          { p_hex:hex, p_pin_hash:pin }),
+  listSuggestions: (hex, pin)         => rpc("list_suggestions",    { p_hex:hex, p_pin_hash:pin }),
+  readSuggestion : (hex, pin, id, v)  => rpc("set_suggestion_read", { p_hex:hex, p_pin_hash:pin, p_id:id, p_read:v }),
+  delSuggestion  : (hex, pin, id)     => rpc("delete_suggestion",   { p_hex:hex, p_pin_hash:pin, p_id:id }),
+  theirEntries: (hex, viewerHex) =>
+                  rpc("their_entries", { p_hex:hex, p_viewer_hex:viewerHex || null }),
+};
+
+/* ============================================================
+   도구
+   ============================================================ */
+const $  = (s,r)=> (r||document).querySelector(s);
+const el = (tag, cls, txt) => { const n=document.createElement(tag); if(cls)n.className=cls; if(txt!=null)n.textContent=txt; return n; };
+
+const enc = new TextEncoder();
+const toHex = s => Array.from(enc.encode(s)).map(b=>b.toString(16).padStart(2,"0")).join("");
+async function sha256(s){
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} },
+};
+
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseYmd = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const todayStr = () => ymd(new Date());
+const prettyDate = s => { const d=parseYmd(s); return (d.getMonth()+1)+"월 "+d.getDate()+"일 "+DOW[d.getDay()]+"요일"; };
+const prettyStamp = iso => {
+  const d = new Date(iso);
+  return (d.getMonth()+1)+"월 "+d.getDate()+"일 "+pad(d.getHours())+":"+pad(d.getMinutes());
+};
+const shiftDay = (s,n) => { const d=parseYmd(s); d.setDate(d.getDate()+n); return ymd(d); };
+
+/* 이번 분기 (1~3 / 4~6 / 7~9 / 10~12월) */
+function thisQuarter(){
+  const t = new Date();
+  const qi = Math.floor(t.getMonth()/3);            // 0,1,2,3
+  return { y:t.getFullYear(), no:qi+1, months:[qi*3, qi*3+1, qi*3+2] };  // months 는 0부터
+}
+
+/* ============================================================
+   상태
+   ============================================================ */
+const state = {
+  me: LS.get("muksang.me", null),
+  view: "home",
+  arg: null,
+  people: null,
+  jump: null,
+};
+
+/* ============================================================
+   글씨 크기
+   ============================================================ */
+const FS = ["17px","20px","24px"];
+function applyFs(i){
+  document.documentElement.style.setProperty("--fs", FS[i]);
+  LS.set("muksang.fs", i);
+  [1,2,3].forEach(n => $("#fs"+n).setAttribute("aria-pressed", String(n-1===i)));
+}
+[1,2,3].forEach(n => $("#fs"+n).addEventListener("click", ()=>applyFs(n-1)));
+applyFs(LS.get("muksang.fs", 1));
+
+/* ============================================================
+   라우팅
+   ============================================================ */
+const main = $("#main");
+const backBtn = $("#backBtn");
+const homeBtn = $("#homeBtn");
+
+/* 지나온 화면을 차례로 쌓아 둡니다. 뒤로가기는 바로 직전 화면으로 갑니다. */
+let hist = [];
+
+function go(view, arg, opts){
+  opts = opts || {};
+  if (opts.reset)        hist = [];
+  else if (!opts.replace) hist.push({ view: state.view, arg: state.arg });
+  state.view = view; state.arg = arg;
+  paintNav();
+  render(); window.scrollTo(0,0);
+}
+function goBack(){
+  const prev = hist.pop();
+  if (!prev){ go("home", null, { reset:true }); return; }
+  state.view = prev.view; state.arg = prev.arg;
+  paintNav();
+  render(); window.scrollTo(0,0);
+}
+function paintNav(){
+  const atHome = (state.view === "home");
+  backBtn.hidden = atHome;
+  homeBtn.hidden = atHome;
+}
+backBtn.addEventListener("click", goBack);
+homeBtn.addEventListener("click", ()=> go("home", null, { reset:true }));
+
+function render(){
+  main.innerHTML = "";
+  const v = el("div","view");
+  main.appendChild(v);
+  ({ home:viewHome, write:viewWrite, plaza:viewPlaza, board:viewBoard,
+     person:viewPerson, inbox:viewInbox })[state.view](v);
+}
+
+function netBanner(retry){
+  const b = el("div","banner");
+  b.appendChild(el("span","","인터넷 연결이 불안정합니다. 잠시 뒤 다시 시도해 주세요."));
+  const again = el("button","btn","다시 불러오기");
+  again.addEventListener("click", retry);
+  b.appendChild(again);
+  return b;
+}
+const loadingCard = () => Object.assign(el("section","card empty"),
+  { innerHTML:'<b>불러오는 중입니다</b>잠시만 기다려 주세요.' });
+
+/* ============================================================
+   화면 1 — 홈
+   ============================================================ */
+function viewHome(root){
+
+  const hero = el("header","hero");
+  hero.append(el("h1","","묵상 나눔광장"), el("p","","오늘 읽은 말씀을 적고, 함께 나눕니다."));
+  root.appendChild(hero);
+
+  const who = el("section","card whoami");
+  if (state.me){
+    const row = el("div","row");
+    row.append(el("span","eyebrow","이름"), el("span","nm",state.me.name));
+    const btn = el("button","btn","이름 변경");
+    btn.style.marginTop = ".7rem";
+    btn.addEventListener("click", ()=>{ state.me=null; LS.del("muksang.me"); state.people=null; render(); });
+    who.append(row, btn);
+  } else {
+    who.appendChild(el("h2","","먼저 이름을 정해 주세요"));
+    who.appendChild(el("p","note","이름과 숫자 4자리를 함께 정합니다. 다음부터는 이 기기에서 다시 입력하지 않아도 됩니다."));
+    const f = el("div"); f.style.marginTop = "1rem";
+
+    const l1 = el("label","fld"); l1.append(el("span","","이름"));
+    const i1 = el("input"); i1.type="text"; i1.id="nmInput"; i1.placeholder="예: 홍길동"; i1.autocomplete="off";
+    l1.appendChild(i1);
+
+    const l2 = el("label","fld"); l2.append(el("span","","비밀번호 — 숫자 4자리"));
+    const i2 = el("input"); i2.type="password"; i2.id="pwInput"; i2.inputMode="numeric";
+    i2.maxLength=4; i2.placeholder="••••"; i2.autocomplete="off";
+    l2.appendChild(i2);
+
+    const errBox = el("p","err"); errBox.id="nameErr";
+    const save = el("button","btn primary wide","이 이름으로 시작하기");
+    save.addEventListener("click", ()=>claimName(i1.value, i2.value, errBox, save));
+    i2.addEventListener("keydown", e=>{ if(e.key==="Enter") save.click(); });
+
+    f.append(l1,l2,errBox,save);
+    who.appendChild(f);
+  }
+  root.appendChild(who);
+
+
+  const menu = el("nav","menu");
+
+  const a1 = el("a","bigbtn"); a1.href = BIBLE_URL; a1.target="_blank"; a1.rel="noopener";
+  a1.innerHTML = '<span>묵상 본문 보기<span class="sub">성서유니온 · 오늘의 말씀 (새 창)</span></span><span class="chev">&#8599;</span>';
+  menu.appendChild(a1);
+
+  const a2 = el("a","bigbtn"); a2.href = zoomLink();
+  a2.innerHTML = '<span>교회 줌 접속<span class="sub">줌 앱이 바로 열립니다</span></span><span class="chev">&#8599;</span>';
+  const zfall = el("p","note");
+  zfall.style.margin = "-.15rem 0 .1rem .2rem";
+  zfall.innerHTML = '줌이 안 열리면 <a href="'+ZOOM_WEB+'" target="_blank" rel="noopener">여기를 눌러 주세요</a>';
+  menu.append(a2, zfall);
+
+  const b3 = el("button","bigbtn solid");
+  b3.innerHTML = '<span>묵상 나눔하기<span class="sub">오늘 묵상을 적습니다</span></span><span class="chev">&#8250;</span>';
+  b3.addEventListener("click", ()=>{ if(needName()) return; go("write", { date: todayStr() }); });
+  menu.appendChild(b3);
+
+  const b4 = el("button","bigbtn");
+  b4.innerHTML = '<span>오늘의 나눔 보기<span class="sub">그날 나눈 묵상을 함께 봅니다</span></span><span class="chev">&#8250;</span>';
+  b4.addEventListener("click", ()=>go("plaza"));
+  menu.appendChild(b4);
+
+  root.appendChild(menu);
+  if (state.me) root.appendChild(progressCard());
+  root.appendChild(suggestSection());
+}
+
+/* ── 앱 업데이트 건의함 ──────────────────────────────────────────────
+   보내는 건 누구나. 읽는 건 관리자만 — 서버가 관리자인지 확인한 뒤에야
+   목록을 내어 줍니다. */
+function suggestSection(){
+  const wrap = el("div");
+  const slot = el("div");            // 관리자면 여기에 [건의함 보기] 가 생깁니다
+  wrap.append(slot, suggestBox());
+
+  if (state.me){
+    store.amIAdmin(state.me.hex, state.me.pinHash).then(ok => {
+      if (ok !== true) return;
+      const b = el("button","bigbtn");
+      b.style.marginBottom = "1.1rem";
+      b.innerHTML = '<span>건의함 보기<span class="sub">교인들이 보낸 건의 · 관리자만</span></span><span class="chev">&#8250;</span>';
+      b.addEventListener("click", ()=>go("inbox"));
+      slot.appendChild(b);
+    }).catch(()=>{});
+  }
+  return wrap;
+}
+
+function suggestBox(){
+  const card = el("section","card suggest");
+  card.append(el("h2","","앱에 바라는 점"),
+              el("p","note","고쳤으면 하는 것, 있었으면 하는 기능을 적어 주세요. 관리자만 봅니다."));
+
+  const ta = el("textarea");
+  ta.id = "suggestBody"; ta.maxLength = 1000;
+  ta.placeholder = "예: 글씨를 더 크게 하고 싶어요";
+
+  const msg = el("p","err");
+  const send = el("button","btn primary wide","보내기");
+  send.style.marginTop = ".7rem";
+
+  send.addEventListener("click", async ()=>{
+    const body = ta.value.trim();
+    msg.className = "err"; msg.textContent = "";
+    if (!body){ msg.textContent = "내용을 적어 주세요."; return; }
+    send.disabled = true; send.textContent = "보내는 중…";
+    try{
+      const res = await store.addSuggestion(state.me ? state.me.hex : null,
+                                            state.me ? state.me.pinHash : null, body);
+      if (res === "empty"){
+        msg.textContent = "내용을 적어 주세요.";
+      } else {
+        ta.value = "";
+        msg.className = "okmsg";
+        msg.textContent = "보내 주셔서 감사합니다. 잘 받았습니다.";
+      }
+    }catch(e){
+      msg.textContent = "보내지 못했습니다. 잠시 뒤 다시 눌러 주세요.";
+    }
+    send.disabled = false; send.textContent = "보내기";
+  });
+
+  card.append(ta, msg, send);
+  return card;
+}
+
+/* 나의 묵상 진도 — 본인 화면에만 나옵니다 */
+function progressCard(){
+  const card = el("section","card prog");
+  card.append(el("h2","","나의 묵상"), el("p","lock",""));
+  const box = el("div");
+  box.appendChild(el("p","note","불러오는 중입니다…"));
+  card.appendChild(box);
+
+  store.progress(state.me.hex, state.me.pinHash).then(rows => {
+    box.innerHTML = "";
+    if (!rows || !rows.length){ box.appendChild(el("p","note","아직 기록이 없습니다.")); return; }
+    for (const r of rows){
+      const done = Number(r.done)||0, total = Number(r.total)||1;
+      const pct = Math.round(done / total * 100);
+      const row = el("div","prow" + (r.kind === "year" ? " year" : ""));
+      const top = el("div","top");
+      const left = el("span","", r.label);
+      const right = el("span","");
+      right.innerHTML = '<b class="tnum">' + pct + '%</b> <span class="of tnum">' + done + ' / ' + total + '일</span>';
+      top.append(left, right);
+      const bar = el("div","bar");
+      const fill = el("i"); fill.style.width = Math.max(pct,0) + "%";
+      bar.appendChild(fill);
+      row.append(top, bar);
+      box.appendChild(row);
+    }
+  }).catch(()=>{ box.innerHTML=""; box.appendChild(el("p","note","진도를 불러오지 못했습니다.")); });
+
+  return card;
+}
+
+function needName(){
+  if (state.me) return false;
+  const b = $("#nameErr"); if (b) b.textContent = "먼저 위에서 이름을 정해 주세요.";
+  window.scrollTo(0,0);
+  return true;
+}
+
+function zoomLink(){
+  const nm = encodeURIComponent(state.me ? state.me.name : "");
+  const ua = navigator.userAgent;
+  const q = "action=join&confno=" + ZOOM_NO + (nm ? "&uname="+nm : "");
+  if (/Android/i.test(ua)){
+    return "intent://zoom.us/join?" + q +
+      "#Intent;scheme=zoomus;package=us.zoom.videomeetings;S.browser_fallback_url=" +
+      encodeURIComponent(ZOOM_WEB) + ";end";
+  }
+  if (/iPhone|iPad|iPod/i.test(ua)) return "zoomus://zoom.us/join?" + q;
+  return "zoommtg://zoom.us/join?" + q;
+}
+
+async function claimName(rawName, pin, errBox, btn){
+  const name = (rawName||"").trim().replace(/\s+/g," ");
+  errBox.textContent = "";
+  if (name.length < 2)              return errBox.textContent = "이름을 두 글자 이상 적어 주세요.";
+  if (enc.encode(name).length > 40) return errBox.textContent = "이름이 너무 깁니다.";
+  if (!/^\d{4}$/.test(pin||""))     return errBox.textContent = "비밀번호는 숫자 4자리입니다.";
+
+  btn.disabled = true; btn.textContent = "확인하는 중…";
+  try{
+    const hex  = toHex(name);
+    const hash = await sha256(name + "::" + pin);
+    const res  = await store.claimName(hex, name, hash);
+    if (res === "wrong_pin"){
+      errBox.textContent = "이미 쓰고 있는 이름입니다. 비밀번호가 다릅니다.";
+      btn.disabled = false; btn.textContent = "이 이름으로 시작하기";
+      return;
+    }
+    state.me = { name, hex, pinHash: hash };
+    LS.set("muksang.me", state.me);
+    state.people = null;
+    render();
+  }catch(e){
+    errBox.textContent = "연결하지 못했습니다. 인터넷을 확인하고 다시 눌러 주세요.";
+    btn.disabled = false; btn.textContent = "이 이름으로 시작하기";
+  }
+}
+
+/* ============================================================
+   화면 2 — 묵상 나눔하기
+   ============================================================ */
+function viewWrite(root){
+  const a = state.arg || {};
+  const editing = !!a.editing;
+  const draftKey = "muksang.draft";
+
+  root.appendChild(el("h2","sectitle", editing ? "묵상 고치기" : "묵상 나눔하기"));
+  root.appendChild(el("p","secsub", editing ? "고친 내용으로 바꿔 저장합니다." : "적는 동안 이 기기에 자동으로 임시 저장됩니다."));
+
+  const form = el("section","card"); form.style.padding = "1.1rem";
+
+  const dwrap = el("label","fld"); dwrap.append(el("span","","날짜"));
+  const drow = el("div"); drow.style.display="flex"; drow.style.gap=".5rem"; drow.style.alignItems="center";
+  const dtext = el("strong","tnum",""); dtext.style.fontSize="1.05rem";
+  const dbtn = el("button","btn","날짜 변경");
+  const dinp = el("input"); dinp.type="date"; dinp.id="dateInput"; dinp.hidden = true;
+  drow.append(dtext, dbtn); dwrap.append(drow, dinp);
+  dbtn.addEventListener("click", ()=>{ dinp.hidden = !dinp.hidden; if(!dinp.hidden) dinp.focus(); });
+  dinp.addEventListener("change", ()=>{ if(dinp.value){ dtext.textContent = prettyDate(dinp.value); saveDraft(); } });
+
+  const twrap = el("label","fld"); twrap.append(el("span","","제목"));
+  const tinp = el("input"); tinp.type="text"; tinp.id="titleInput"; tinp.placeholder="예: 기다리시는 하나님"; tinp.maxLength=60;
+  twrap.appendChild(tinp);
+
+  const bwrap = el("label","fld"); bwrap.append(el("span","","본문"));
+  const binp = el("textarea"); binp.id="bodyInput"; binp.placeholder="오늘 말씀에서 받은 마음을 적어 주세요.";
+  const counter = el("p","note tnum","");
+  bwrap.append(binp, counter);
+
+  const swrap = el("div"); swrap.style.marginBottom="1.1rem";
+  const slab = el("div"); slab.style.fontWeight="700"; slab.style.fontSize=".86rem"; slab.style.marginBottom=".35rem";
+  slab.textContent = "누가 볼 수 있나요?";
+  const seg = el("div","seg");
+  const sPub = el("button"); sPub.type="button";
+  sPub.innerHTML = '모두에게 공개<span class="sub">나눔광장에 올라갑니다</span>';
+  const sPriv = el("button"); sPriv.type="button";
+  sPriv.innerHTML = '나만 보기<span class="sub">출석표에 표시되지 않습니다</span>';
+  seg.append(sPub, sPriv);
+  swrap.append(slab, seg);
+
+  const errBox = el("p","err");
+  const submit = el("button","btn primary wide","공개하고 저장하기");
+
+  let isPublic = true;
+  const paint = ()=>{
+    sPub.setAttribute("aria-pressed", String(isPublic));
+    sPriv.setAttribute("aria-pressed", String(!isPublic));
+    submit.textContent = isPublic ? "공개하고 저장하기" : "나만 보기로 저장하기";
+  };
+  sPub.addEventListener("click", ()=>{ isPublic=true; paint(); saveDraft(); });
+  sPriv.addEventListener("click", ()=>{ isPublic=false; paint(); saveDraft(); });
+
+  form.append(dwrap, twrap, bwrap, swrap, errBox, submit);
+  root.appendChild(form);
+
+  const startDate = a.date || todayStr();
+  dinp.value = startDate; dtext.textContent = prettyDate(startDate);
+  if (editing){
+    tinp.value = a.title || ""; binp.value = a.body || ""; isPublic = a.isPublic !== false;
+  } else {
+    const d = LS.get(draftKey, null);
+    if (d && d.name === state.me.name){
+      if (d.date){ dinp.value = d.date; dtext.textContent = prettyDate(d.date); }
+      tinp.value = d.title || ""; binp.value = d.body || ""; isPublic = d.isPublic !== false;
+    }
+  }
+  paint();
+
+  const tick = ()=>{
+    if (binp.value.length > MAX_BODY) binp.value = binp.value.slice(0,MAX_BODY);
+    counter.textContent = binp.value.length + " / " + MAX_BODY + "자";
+  };
+  function saveDraft(){
+    if (editing) return;
+    LS.set(draftKey, { name: state.me.name, date: dinp.value, title: tinp.value, body: binp.value, isPublic });
+  }
+  tinp.addEventListener("input", saveDraft);
+  binp.addEventListener("input", ()=>{ tick(); saveDraft(); });
+  tick();
+
+  submit.addEventListener("click", async ()=>{
+    errBox.textContent = "";
+    const title = tinp.value.trim(), body = binp.value.trim(), date = dinp.value || startDate;
+    if (!title) return errBox.textContent = "제목을 적어 주세요.";
+    if (!body)  return errBox.textContent = "본문을 적어 주세요.";
+    submit.disabled = true; submit.textContent = "저장하는 중…";
+    try{
+      const res = await store.saveEntry(state.me.hex, state.me.pinHash, date, title, body,
+                                        isPublic, editing ? a.date : null);
+      if (res === "wrong_pin"){
+        errBox.textContent = "비밀번호가 맞지 않습니다. 홈에서 이름을 다시 정해 주세요.";
+        submit.disabled = false; paint(); return;
+      }
+      if (!editing) LS.del(draftKey);
+      state.people = null; state.jump = { date };
+      go("person", { hex: state.me.hex, name: state.me.name }, { reset:true });
+    }catch(e){
+      errBox.textContent = "저장하지 못했습니다. 인터넷을 확인하고 다시 눌러 주세요.";
+      submit.disabled = false; paint();
+    }
+  });
+}
+
+/* ============================================================
+   화면 3 — 나눔광장 (오늘 나눈 묵상)
+   ============================================================ */
+function viewPlaza(root){
+  let day = (state.arg && state.arg.date) || todayStr();
+
+  root.appendChild(el("h2","sectitle","오늘의 나눔"));
+  root.appendChild(el("p","secsub","그날 함께 나눈 묵상입니다. 마음이 닿으면 좋아요와 댓글을 남겨 주세요."));
+
+  const toBoard = el("button","bigbtn");
+  toBoard.innerHTML = '<span>묵상 출석표 보기<span class="sub">누가 어느 날 묵상했는지 한눈에</span></span><span class="chev">&#8250;</span>';
+  toBoard.style.marginBottom = "1.1rem";
+  toBoard.addEventListener("click", ()=>go("board"));
+  root.appendChild(toBoard);
+
+  const bar = el("section","card daybar");
+  const dt   = el("span","dt","");
+  const cnt  = el("span","cnt","");
+  const nav  = el("div","nav");
+  const prev = el("button","btn small","< 이전 날");
+  const next = el("button","btn small","다음 날 >");
+  nav.append(prev, next);
+  bar.append(dt, cnt, nav);
+  root.appendChild(bar);
+
+  const box = el("div");
+  root.appendChild(box);
+
+  prev.addEventListener("click", ()=>{ day = shiftDay(day,-1); load(); });
+  next.addEventListener("click", ()=>{ day = shiftDay(day, 1); load(); });
+
+  async function load(){
+    dt.textContent = prettyDate(day);
+    next.disabled = (day >= todayStr());
+    cnt.textContent = "";
+    box.innerHTML = ""; box.appendChild(loadingCard());
+    state.arg = { date: day };
+    try{
+      const rows = await store.feed(day, state.me ? state.me.hex : null);
+      box.innerHTML = "";
+      cnt.textContent = rows.length ? (rows.length + "분이 나눴습니다") : "";
+      if (!rows.length){
+        box.appendChild(Object.assign(el("section","card empty"),
+          { innerHTML:'<b>이 날은 아직 나눔이 없습니다</b>' +
+                      (day === todayStr() ? '첫 묵상을 올려 주세요.' : '') }));
+        return;
+      }
+      for (const r of rows) box.appendChild(feedCard(r));
+    }catch(e){
+      box.innerHTML = ""; box.appendChild(netBanner(load));
+    }
+  }
+  load();
+}
+
+/* 좋아요 · 댓글 — 오늘의 나눔과 묵상기록에서 똑같이 씁니다.
+   글에 달린 좋아요·댓글은 글에 붙어 있어서 어느 화면에서 봐도 그대로 남습니다. */
+function socialBlock(ownerHex, date, counts, extraBtns){
+  const acts = el("div","acts");
+  const cbox = el("div","cbox"); cbox.hidden = true;
+
+  let liked = !!counts.i_liked, nLikes = Number(counts.like_count)||0;
+  const like = el("button","btn likebtn","");
+  const paintLike = ()=>{
+    like.textContent = "좋아요 " + nLikes;
+    like.setAttribute("aria-pressed", String(liked));
+  };
+  paintLike();
+  like.addEventListener("click", async ()=>{
+    if (!state.me){ like.textContent = "이름을 먼저 정해 주세요"; setTimeout(paintLike,1800); return; }
+    like.disabled = true;
+    try{
+      const res = await store.toggleLike(state.me.hex, state.me.pinHash, ownerHex, date);
+      const row = Array.isArray(res) ? res[0] : res;
+      nLikes = Number(row.n_likes)||0; liked = !!row.is_liked;
+    }catch(e){}
+    like.disabled = false; paintLike();
+  });
+
+  let nCmts = Number(counts.comment_count)||0;
+  const cbtn = el("button","btn","댓글 " + nCmts);
+  let loadedOnce = false;
+  cbtn.addEventListener("click", ()=>{
+    cbox.hidden = !cbox.hidden;
+    if (!cbox.hidden && !loadedOnce){ loadedOnce = true; loadComments(); }
+  });
+
+  async function loadComments(){
+    cbox.innerHTML = ""; cbox.appendChild(el("p","note","불러오는 중입니다…"));
+    let rows = [];
+    try{ rows = await store.comments(ownerHex, date); }
+    catch(e){ cbox.innerHTML=""; cbox.appendChild(el("p","note","댓글을 불러오지 못했습니다.")); return; }
+    nCmts = rows.length; cbtn.textContent = "댓글 " + nCmts;
+    cbox.innerHTML = "";
+    for (const m of rows){
+      const w = el("div","cmt");
+      const top = el("div");
+      top.appendChild(el("span","cwho", m.name));
+      if (state.me && m.hex === state.me.hex){
+        const dl = el("button","cdel","지우기");
+        dl.style.marginLeft = ".5rem";
+        dl.addEventListener("click", async ()=>{
+          dl.disabled = true;
+          try{ await store.delComment(state.me.hex, state.me.pinHash, m.id); loadComments(); }
+          catch(e){ dl.disabled = false; }
+        });
+        top.appendChild(dl);
+      }
+      w.append(top, el("div","cbody", m.body));
+      cbox.appendChild(w);
+    }
+    if (!rows.length) cbox.appendChild(el("p","note","아직 댓글이 없습니다."));
+
+    if (state.me){
+      const f = el("div","cform");
+      const inp = el("input"); inp.type="text"; inp.maxLength=200; inp.placeholder="따뜻한 한마디를 남겨 주세요";
+      const send = el("button","btn primary","올리기");
+      const post = async ()=>{
+        const body = inp.value.trim();
+        if (!body) return;
+        send.disabled = true; send.textContent = "…";
+        try{ await store.addComment(state.me.hex, state.me.pinHash, ownerHex, date, body); inp.value=""; loadComments(); }
+        catch(e){ send.disabled = false; send.textContent = "올리기"; }
+      };
+      send.addEventListener("click", post);
+      inp.addEventListener("keydown", e=>{ if(e.key==="Enter") post(); });
+      f.append(inp, send);
+      cbox.appendChild(f);
+    } else {
+      cbox.appendChild(el("p","note","댓글을 남기려면 홈에서 이름을 먼저 정해 주세요."));
+    }
+  }
+
+  acts.append(like, cbtn);
+  for (const b of (extraBtns||[])) acts.appendChild(b);
+  return { acts, cbox };
+}
+
+function feedCard(r){
+  const c = el("section","card feed");
+  const head = el("div");
+  head.appendChild(el("span","who", r.name));
+  if (state.me && r.hex === state.me.hex) head.append(" ", el("span","chip","나"));
+  c.append(head, el("h3","", r.title||""), el("div","body", r.body||""));
+
+  const more = el("button","btn","이분의 기록 보기");
+  more.addEventListener("click", ()=>{ state.jump = null; go("person", { hex:r.hex, name:r.name }); });
+
+  const s = socialBlock(r.hex, r.date, r, [more]);
+  c.append(s.acts, s.cbox);
+  return c;
+}
+
+/* ============================================================
+   화면 4 — 묵상 출석표
+   ============================================================ */
+function viewBoard(root){
+  const q = thisQuarter();
+
+  root.appendChild(el("h2","sectitle","묵상 출석표"));
+  root.appendChild(el("p","secsub",
+    q.y + "년 " + q.no + "분기 (" + (q.months[0]+1) + "~" + (q.months[2]+1) + "월) · " +
+    "초록색은 나눔한 날, 검은색은 쉬어간 날입니다. 이름을 누르면 그분의 기록을 볼 수 있습니다."));
+
+  const box = el("div");
+  root.appendChild(box);
+
+  function paint(){
+    box.innerHTML = "";
+    if (state.people === null){ box.appendChild(loadingCard()); return; }
+    if (!state.people.length){
+      box.appendChild(Object.assign(el("section","card empty"),
+        { innerHTML:'<b>아직 아무도 나누지 않았습니다</b>첫 묵상을 올려 주세요.' }));
+      return;
+    }
+    for (const p of state.people) box.appendChild(personCard(p, q));
+    const lg = el("div","legend");
+    lg.innerHTML = '<span><i style="background:var(--leaf)"></i>나눔한 날</span>' +
+                   '<span><i style="background:var(--coal)"></i>쉬어간 날</span>' +
+                   '<span><i class="fu"></i>아직 오지 않은 날</span>';
+    box.appendChild(lg);
+  }
+
+  async function load(){
+    state.people = null; paint();
+    try{
+      const rows = await store.plaza();
+      const me = state.me ? state.me.hex : null;
+      state.people = rows.map(r => ({
+        hex:r.hex, name:r.name,
+        total: Number(r.total)||0,
+        quarter: Number(r.quarter_count)||0,
+        daySet: new Set(r.days || []),
+      })).sort((a,b)=>{
+        if (a.hex===me) return -1;
+        if (b.hex===me) return 1;
+        return (a.name||"").localeCompare(b.name||"", "ko");
+      });
+    }catch(e){
+      box.innerHTML = ""; box.appendChild(netBanner(load)); return;
+    }
+    paint();
+  }
+
+  if (state.people === null) load(); else paint();
+}
+
+function personCard(p, q){
+  const card = el("section","card person");
+
+  const head = el("div","head");
+  const left = el("div");
+  const nb = el("button","namebtn", p.name || "이름 없음");
+  nb.addEventListener("click", ()=>{ state.jump = null; go("person", { hex:p.hex, name:p.name }); });
+  left.appendChild(nb);
+  if (state.me && p.hex === state.me.hex) left.append(" ", el("span","chip","나"));
+
+  const counts = el("div","counts");
+  counts.innerHTML =
+    '<span>이번 분기</span><b class="tnum">' + p.quarter + '회</b>' +
+    '<span>전체</span><b class="tnum">' + p.total + '회</b>';
+  head.append(left, counts);
+  card.append(head, buildGrid(p, q));
+  return card;
+}
+
+/* 출석표: 달마다 한 덩어리. 세로 7칸(일~토), 가로 한 줄이 한 주.
+   그 달의 1일부터 말일까지가 모두 그 달 덩어리 안에 들어갑니다. */
+function buildGrid(p, q){
+  const scroll = el("div","gridscroll");
+  const grid = el("div","grid");
+
+  const dowcol = el("div","dowcol");
+  DOW.forEach(d => dowcol.appendChild(el("div","dow",d)));
+  grid.appendChild(dowcol);
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (const m of q.months){
+    const group = el("div","mgroup");
+    const lb = el("button","mlabel", (m+1) + "월");
+    lb.title = (m+1) + "월 기록 보기";
+    lb.addEventListener("click", ()=>{
+      state.jump = { month: q.y + "-" + pad(m+1) };
+      go("person", { hex:p.hex, name:p.name });
+    });
+    const weeks = el("div","weeks");
+
+    const first = new Date(q.y, m, 1);
+    const last  = new Date(q.y, m+1, 0);
+    const colStart = new Date(first);
+    colStart.setDate(1 - first.getDay());          // 1일이 든 주의 일요일
+
+    for (let c = new Date(colStart); c <= last; c.setDate(c.getDate()+7)){
+      const col = el("div","week");
+      for (let i=0;i<7;i++){
+        const d = new Date(c); d.setDate(d.getDate()+i);
+        const cell = el("div","d");
+        if (d.getMonth() !== m || d.getFullYear() !== q.y){
+          cell.classList.add("blank");
+        } else if (d > today){
+          cell.classList.add("future");
+          cell.title = prettyDate(ymd(d));
+        } else if (p.daySet.has(ymd(d))){
+          cell.classList.add("on");
+          cell.title = prettyDate(ymd(d)) + " 나눔";
+        } else {
+          cell.title = prettyDate(ymd(d));
+        }
+        col.appendChild(cell);
+      }
+      weeks.appendChild(col);
+    }
+    group.append(lb, weeks);
+    grid.appendChild(group);
+  }
+
+  scroll.appendChild(grid);
+  return scroll;
+}
+
+/* ============================================================
+   화면 6 — 건의함 (관리자 전용)
+   ============================================================ */
+function viewInbox(root){
+  root.appendChild(el("h2","sectitle","건의함"));
+  const sub = el("p","secsub","교인들이 보낸 건의입니다. 관리자만 볼 수 있습니다.");
+  root.appendChild(sub);
+
+  const box = el("div");
+  box.appendChild(loadingCard());
+  root.appendChild(box);
+
+  async function load(){
+    let rows;
+    try{ rows = await store.listSuggestions(state.me.hex, state.me.pinHash); }
+    catch(e){ box.innerHTML = ""; box.appendChild(netBanner(load)); return; }
+
+    box.innerHTML = "";
+    if (!rows.length){
+      sub.textContent = "교인들이 보낸 건의입니다. 관리자만 볼 수 있습니다.";
+      box.appendChild(Object.assign(el("section","card empty"),
+        { innerHTML:'<b>아직 들어온 건의가 없습니다</b>' }));
+      return;
+    }
+    const unread = rows.filter(r => !r.is_read).length;
+    sub.innerHTML = '모두 <b class="tnum">' + rows.length + '</b>건' +
+                    (unread ? ' · 안 읽은 것 <b class="tnum">' + unread + '</b>건' : '') +
+                    ' · 관리자만 볼 수 있습니다.';
+    for (const r of rows) box.appendChild(sugCard(r, load));
+  }
+  load();
+}
+
+function sugCard(r, reload){
+  const c = el("section","card sug" + (r.is_read ? "" : " unread"));
+
+  const top = el("div","top");
+  top.append(el("b","", r.name || "익명"), el("span","", prettyStamp(r.created_at)));
+  if (!r.is_read) top.append(el("span","chip","안 읽음"));
+  c.append(top, el("div","body", r.body || ""));
+
+  const tools = el("div","tools");
+  const mark = el("button","btn", r.is_read ? "안 읽음으로" : "읽음 표시");
+  mark.addEventListener("click", async ()=>{
+    mark.disabled = true;
+    try{ await store.readSuggestion(state.me.hex, state.me.pinHash, r.id, !r.is_read); reload(); }
+    catch(e){ mark.disabled = false; }
+  });
+
+  const del = el("button","btn danger","지우기");
+  del.addEventListener("click", ()=>{
+    tools.innerHTML = "";
+    tools.appendChild(el("span","","정말 지울까요?"));
+    const yes = el("button","btn danger","지우기");
+    const no  = el("button","btn","그만두기");
+    yes.addEventListener("click", async ()=>{
+      yes.disabled = no.disabled = true; yes.textContent = "지우는 중…";
+      try{ await store.delSuggestion(state.me.hex, state.me.pinHash, r.id); reload(); }
+      catch(e){ tools.innerHTML = ""; tools.appendChild(el("span","err","지우지 못했습니다.")); }
+    });
+    no.addEventListener("click", reload);
+    tools.append(yes, no);
+  });
+
+  tools.append(mark, del);
+  c.appendChild(tools);
+  return c;
+}
+
+/* ============================================================
+   화면 5 — 개인 묵상기록
+   ============================================================ */
+function viewPerson(root){
+  const { hex, name } = state.arg;
+  const mine = !!(state.me && state.me.hex === hex);
+  const p = (state.people || []).find(x => x.hex === hex);
+
+  root.appendChild(el("h2","sectitle", (name||"이름 없음") + "의 묵상기록"));
+  const sub = el("p","secsub");
+  root.appendChild(sub);
+  const paintSub = v => {
+    sub.innerHTML = v
+      ? '전체 <b class="tnum">' + v.total + '</b>회 나눔 · 이번 분기 <b class="tnum">' + v.quarter + '</b>회' +
+        (mine ? ' · ‘나만 보기’ 글은 나에게만 보입니다.' : '')
+      : (mine ? '‘나만 보기’ 글은 나에게만 보입니다.' : '');
+  };
+  paintSub(p);
+  if (!p){
+    store.plaza().then(rows => {
+      const r = rows.find(x => x.hex === hex);
+      if (r) paintSub({ total:Number(r.total)||0, quarter:Number(r.quarter_count)||0 });
+    }).catch(()=>{});
+  }
+
+  const bar = el("div","filters"); bar.hidden = true;
+  const selM = el("select"); selM.id="filterMonth"; selM.setAttribute("aria-label","월 고르기");
+  const selD = el("select"); selD.id="filterDay";   selD.setAttribute("aria-label","일 고르기");
+  const hits = el("span","hits","");
+  bar.append(el("span","lbl","월"), selM, el("span","lbl","일"), selD, hits);
+  root.appendChild(bar);
+
+  const box = el("div");
+  box.appendChild(loadingCard());
+  root.appendChild(box);
+
+  loadEntries(hex, mine).then(items => {
+    box.innerHTML = "";
+    if (items === null){ box.appendChild(netBanner(()=>go("person",{hex,name},{replace:true}))); return; }
+    if (!items.length){
+      box.appendChild(Object.assign(el("section","card empty"),
+        { innerHTML:'<b>아직 나눈 글이 없습니다</b>' + (mine ? '첫 묵상을 적어 보세요.' : '') }));
+      return;
+    }
+
+    bar.hidden = false;
+    const yms = [...new Set(items.map(i => i.date.slice(0,7)))];
+    selM.appendChild(new Option("전체",""));
+    for (const ym of yms) selM.appendChild(new Option(Number(ym.slice(5))+"월 ("+ym.slice(0,4)+")", ym));
+    selD.appendChild(new Option("전체",""));
+    for (let d=1; d<=31; d++) selD.appendChild(new Option(d+"일", String(d)));
+
+    const j = state.jump; state.jump = null;
+    if (j && j.month && yms.includes(j.month)) selM.value = j.month;
+
+    function paint(scrollTo){
+      const fm = selM.value, fd = selD.value;
+      const shown = items.filter(it =>
+        (!fm || it.date.slice(0,7) === fm) &&
+        (!fd || Number(it.date.slice(8)) === Number(fd)));
+
+      hits.textContent = shown.length + "개";
+      box.innerHTML = "";
+      if (!shown.length){
+        box.appendChild(Object.assign(el("section","card empty"),
+          { innerHTML:'<b>그 날짜에는 기록이 없습니다</b>월이나 일을 ‘전체’로 바꿔 보세요.' }));
+        return;
+      }
+      let lastMonth = null;
+      for (const it of shown){
+        const ym = it.date.slice(0,7);
+        if (ym !== lastMonth){ lastMonth = ym; box.appendChild(el("div","monthrule", Number(ym.slice(5))+"월")); }
+        box.appendChild(entryCard(it, mine, hex, name));
+      }
+      if (scrollTo){
+        const t = box.querySelector('[data-date="'+scrollTo+'"]');
+        if (t) requestAnimationFrame(()=>t.scrollIntoView({ block:"start", behavior:"smooth" }));
+      }
+    }
+
+    selM.addEventListener("change", ()=>paint());
+    selD.addEventListener("change", ()=>paint());
+    paint(j && j.date ? j.date : null);
+  });
+}
+
+async function loadEntries(hex, mine){
+  try{
+    const rows = mine ? await store.myEntries(hex, state.me.pinHash)
+                      : await store.theirEntries(hex, state.me ? state.me.hex : null);
+    return rows.map(r => ({
+      date:r.date, title:r.title, body:r.body,
+      isPublic: r.is_public !== false,
+      like_count: r.like_count, comment_count: r.comment_count, i_liked: r.i_liked,
+    })).sort((a,b)=> a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  }catch(e){ return null; }
+}
+
+function entryCard(it, mine, hex, name){
+  const c = el("article","card entry");
+  c.dataset.date = it.date;
+  c.appendChild(el("div","when tnum", prettyDate(it.date)));
+  if (it.isPublic === false) c.appendChild(el("span","chip","나만 보기"));
+  c.appendChild(el("h3","",it.title||""));
+  c.appendChild(el("div","body",it.body||""));
+
+  if (it.isPublic !== false){
+    const s = socialBlock(hex, it.date, it, []);
+    c.append(s.acts, s.cbox);
+  }
+
+  if (mine){
+    const tools = el("div","tools");
+    const ed = el("button","btn","수정");
+    ed.addEventListener("click", ()=> go("write", {
+      editing:true, date:it.date, title:it.title, body:it.body,
+      isPublic:it.isPublic!==false
+    }));
+    const del = el("button","btn danger","삭제");
+    del.addEventListener("click", ()=>{
+      tools.innerHTML = "";
+      tools.appendChild(el("span","","정말 지울까요? 되돌릴 수 없습니다."));
+      const yes = el("button","btn danger","지우기");
+      const no  = el("button","btn","그만두기");
+      yes.addEventListener("click", async ()=>{
+        yes.disabled = no.disabled = true; yes.textContent = "지우는 중…";
+        try{
+          await store.deleteEntry(state.me.hex, state.me.pinHash, it.date);
+          state.people = null; state.jump = null;
+          go("person", { hex, name }, { replace:true });
+        }catch(e){
+          tools.innerHTML = "";
+          tools.appendChild(el("span","err","지우지 못했습니다. 다시 시도해 주세요."));
+        }
+      });
+      no.addEventListener("click", ()=> go("person", { hex, name }, { replace:true }));
+      tools.append(yes,no);
+    });
+    tools.append(ed, del);
+    c.appendChild(tools);
+  }
+  return c;
+}
+
+render();
+</script>
+</body>
+</html>

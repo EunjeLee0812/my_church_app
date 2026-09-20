@@ -1,0 +1,16 @@
+name = "woori-church"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# 주보 파일 최대 크기 (바이트). 기본 10MB
+[vars]
+MAX_UPLOAD_BYTES = "10485760"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "woori-church"
+database_id = "4ec9b3a3-7596-4f0f-b82b-11f718b2a791"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "woori-church-files"

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- 로그인 토큰은 백업에서 제외 -->
+    <exclude domain="sharedpref" path="woori_session.xml" />
+</full-backup-content>
