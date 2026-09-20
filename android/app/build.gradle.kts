@@ -1,3 +1,12 @@
+import java.util.Properties
+
+// upload-keystore.jks 와 keystore.properties 가 있으면 release 빌드를 자동 서명합니다.
+// 두 파일은 git 에 올라가지 않습니다 (.gitignore).
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -23,11 +32,23 @@ android {
         buildConfigField("String", "API_BASE", "\"https://woori-church.lej0812.workers.dev\"")
     }
 
+    signingConfigs {
+        if (keystorePropsFile.exists()) {
+            create("upload") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
         }
         release {
+            if (keystorePropsFile.exists()) signingConfig = signingConfigs.getByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -3,6 +3,8 @@
 //  D1(데이터) + R2(주보 파일). 안드로이드 앱이 이 API 를 호출합니다.
 // ══════════════════════════════════════════════════════════════════════════
 
+import { privacyPage } from './privacy.js';
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
@@ -115,6 +117,13 @@ async function route(req, env, url, path) {
   const q = (k) => url.searchParams.get(k);
 
   if (path === '/' || path === '/api') return json({ ok: true, name: '우리교회 API' });
+
+  // 개인정보처리방침 — Play 스토어 등록에 쓰는 공개 페이지 (로그인 불필요)
+  if (path === '/privacy') {
+    return new Response(privacyPage(env.CONTACT_EMAIL || 'woori.church.app@example.com'), {
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+    });
+  }
 
   // ─────────────────────────────────────────────── 교회 찾기 · 등록 (로그인 전)
   if (P('/churches/search')) {

@@ -5,6 +5,8 @@ compatibility_date = "2025-09-01"
 # 주보 파일 최대 크기 (바이트). 기본 10MB
 [vars]
 MAX_UPLOAD_BYTES = "10485760"
+# 개인정보처리방침에 표시될 문의 이메일 — 본인 것으로 바꾸세요
+CONTACT_EMAIL = "바꿔주세요@example.com"
 
 [[d1_databases]]
 binding = "DB"

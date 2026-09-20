@@ -1,12 +1,11 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#2E5E2E"
-        android:pathData="M30,38 L52,42 L52,72 L30,68 Z" />
-    <path android:fillColor="#2E5E2E"
-        android:pathData="M78,38 L56,42 L56,72 L78,68 Z" />
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M52.5,30 L55.5,30 L55.5,40 L52.5,40 Z" />
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M49,33 L59,33 L59,36 L49,36 Z" />
+    <!-- 십자가 -->
+    <path android:fillColor="#2E5E2E" android:pathData="M52.6,31 h2.8 v24 h-2.8 z" />
+    <path android:fillColor="#2E5E2E" android:pathData="M46,36.6 h16 v2.8 h-16 z" />
+    <!-- 펼친 성경 (왼쪽 면) -->
+    <path android:fillColor="#2E5E2E" android:pathData="M30,57 L53,60.5 L53,80 L30,76.5 Z" />
+    <!-- 펼친 성경 (오른쪽 면) -->
+    <path android:fillColor="#2E5E2E" android:pathData="M78,57 L55,60.5 L55,80 L78,76.5 Z" />
 </vector>
