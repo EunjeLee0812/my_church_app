@@ -2,6 +2,11 @@ package kr.woorichurch.app.ui.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -95,31 +100,24 @@ fun ChurchPickScreen(
         BigButton(
             "우리 교회 가입하기",
             tone = ButtonTone.Soft,
-            subtitle = "담임목사님이 교회를 새로 등록합니다",
+            subtitle = "교회 정보 네 가지만 적으면 됩니다",
         ) { onRegisterChurch() }
         Spacer(Modifier.height(24.dp))
     }
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  2. 교회 새로 등록 (담임목사)
+//  2. 교회 새로 등록 — 한 칸씩 차례로
+//   주소 찾기 → 교회 이름 → 교단 → 담임목사 성함 → 신청하시는 분 → 비밀번호
+//   (주소를 맨 앞에 두면 그 뒤로는 키보드가 한 번도 닫히지 않습니다.
+//    찾은 주소의 건물 이름이 '○○교회'면 교회 이름 칸에 미리 넣어 드립니다)
+//   신청하신 분은 이 교회의 '관리자'가 되어 담임목사님과 같은 권한을 가집니다.
 // ══════════════════════════════════════════════════════════════════════════
 @Composable
 fun ChurchRegisterScreen(repo: Repo, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
-    var churchName by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var denomination by remember { mutableStateOf("") }
-    var pastorName by remember { mutableStateOf("") }
-    var seminary by remember { mutableStateOf("") }
-    var homepage by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var pin by remember { mutableStateOf("") }
-    var pin2 by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var inviteCode by remember { mutableStateOf("") }
+    val values = remember { mutableStateMapOf<String, String>() }
+    var building by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
     var done by remember { mutableStateOf(false) }
@@ -132,7 +130,8 @@ fun ChurchRegisterScreen(repo: Repo, onBack: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "교회 정보를 확인한 뒤 승인해 드립니다. 보통 1~2일 걸립니다.\n" +
-                        "승인되면 입력하신 이름과 비밀번호로 로그인할 수 있습니다.",
+                        "승인되면 ${values["applicant"].orEmpty()} 이름과 방금 정한 비밀번호로 들어오실 수 있습니다.\n\n" +
+                        "신청하신 분은 이 교회의 관리자가 됩니다. 성도 가입 승인과 직분 지정을 맡아 주세요.",
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -142,74 +141,61 @@ fun ChurchRegisterScreen(repo: Repo, onBack: () -> Unit) {
         return
     }
 
+    val steps = remember {
+        listOf(
+            Step(
+                key = "address", name = "주소", question = "교회 주소를 찾아 주세요",
+                custom = { v, set, next ->
+                    AddressStep(v, set, next, onBuilding = { b ->
+                        building = b
+                        if (values["church"].isNullOrBlank() && b.contains("교회")) values["church"] = b
+                    })
+                },
+            ),
+            Step("church", "교회 이름", "교회 이름을 적어 주세요", hint = "예) 은혜교회"),
+            Step("denom", "교단", "소속 교단을 적어 주세요", hint = "예) 예장합동, 예장통합, 기감, 기장, 기침 …"),
+            Step("pastor", "담임목사", "담임목사님 성함을 적어 주세요", maxLen = 30),
+            Step(
+                "applicant", "신청하신 분", "신청하시는 분의 이름을 적어 주세요",
+                hint = "이분이 교회 관리자가 됩니다. 목사님이 직접 하시면 목사님 성함 그대로 두세요.",
+                maxLen = 30,
+                prefill = { it["pastor"] },
+            ),
+            Step(
+                "pin", "비밀번호", "들어올 때 쓸 숫자 6자리를 정해 주세요",
+                numeric = true, password = true, maxLen = 6,
+                validate = { v, _ -> if (v.length != 6) "숫자 6자리여야 합니다" else null },
+            ),
+            Step(
+                "pin2", "비밀번호 확인", "같은 숫자 6자리를 한 번 더 적어 주세요",
+                numeric = true, password = true, maxLen = 6,
+                validate = { v, all -> if (v != all["pin"]) "위에서 정한 비밀번호와 다릅니다" else null },
+            ),
+        )
+    }
+
     Screen("우리 교회 등록", onBack = onBack) {
         Spacer(Modifier.height(4.dp))
         Text(
-            "담임목사님이 직접 신청해 주세요. 아래 정보를 확인한 뒤 승인해 드립니다.",
+            "교회 정보를 확인한 뒤 승인해 드립니다.",
             style = MaterialTheme.typography.bodyMedium, color = Muted,
         )
-
-        SectionTitle("교회 정보")
-        Field(churchName, { churchName = it }, "교회 이름 *")
-        Spacer(Modifier.height(10.dp))
-        Field(address, { address = it }, "교회 주소 *")
-        Spacer(Modifier.height(10.dp))
-        Field(phone, { phone = it }, "교회 대표전화 *")
-        Spacer(Modifier.height(10.dp))
-        Field(
-            denomination, { denomination = it }, "소속 교단 *",
-            supporting = "예) 예장합동, 예장통합, 기감, 기장, 기침 …",
-        )
-        Spacer(Modifier.height(10.dp))
-        Field(
-            homepage, { homepage = it }, "교회 홈페이지 또는 교단 교회검색 주소",
-            supporting = "교단 명부에서 확인할 수 있으면 승인이 빨라집니다",
-        )
-
-        SectionTitle("담임목사님 정보")
-        Field(pastorName, { pastorName = it }, "담임목사 성함 *")
-        Spacer(Modifier.height(10.dp))
-        Field(seminary, { seminary = it }, "졸업 신학교 / 안수 교단")
-
-        SectionTitle("로그인에 쓸 비밀번호")
-        Field(pin, { pin = it.filter(Char::isDigit).take(6) }, "숫자 6자리 *", numeric = true, password = true)
-        Spacer(Modifier.height(10.dp))
-        Field(pin2, { pin2 = it.filter(Char::isDigit).take(6) }, "숫자 6자리 다시 입력 *", numeric = true, password = true)
-
-        SectionTitle("관리자 로그인 (권장)")
-        Text(
-            "목사님 계정은 성도 명단 전체를 볼 수 있어 더 안전하게 지켜야 합니다.\n" +
-                "이메일과 비밀번호를 함께 등록해 두시면 그쪽으로도 로그인할 수 있습니다.",
-            style = MaterialTheme.typography.bodySmall, color = Muted,
-        )
-        Spacer(Modifier.height(10.dp))
-        Field(email, { email = it }, "이메일")
-        Spacer(Modifier.height(10.dp))
-        Field(password, { password = it }, "비밀번호 (8자 이상)", password = true)
-
-        SectionTitle("초대 코드 (있는 경우)")
-        Field(inviteCode, { inviteCode = it.uppercase() }, "초대 코드", supporting = "이미 쓰고 계신 교회에서 받은 코드")
-
-        Spacer(Modifier.height(10.dp))
-        Field(note, { note = it }, "남기실 말씀", singleLine = false, minLines = 3)
-
-        Spacer(Modifier.height(20.dp))
-        Message(error)
-        Spacer(Modifier.height(12.dp))
-        BigButton(if (busy) "신청하는 중…" else "등록 신청하기", enabled = !busy) {
+        Spacer(Modifier.height(16.dp))
+        StepForm(
+            steps = steps, values = values,
+            finishLabel = "등록 신청하기", busy = busy, serverError = error,
+        ) {
             error = ""
-            if (pin.length != 6) { error = "비밀번호는 숫자 6자리여야 합니다"; return@BigButton }
-            if (pin != pin2) { error = "비밀번호 두 개가 서로 다릅니다"; return@BigButton }
-            if (email.isNotBlank() && password.length < 8) {
-                error = "관리자 비밀번호는 8자 이상이어야 합니다"; return@BigButton
-            }
             busy = true
             scope.launch {
                 runCatching {
                     repo.registerChurch(
-                        churchName.trim(), address.trim(), phone.trim(), denomination.trim(),
-                        pastorName.trim(), seminary.trim(), homepage.trim(), note.trim(),
-                        pin, email.trim(), password, inviteCode.trim(),
+                        churchName = values["church"].orEmpty().trim(),
+                        address = values["address"].orEmpty().trim(),
+                        denomination = values["denom"].orEmpty().trim(),
+                        pastorName = values["pastor"].orEmpty().trim(),
+                        applicantName = values["applicant"].orEmpty().trim(),
+                        pinNumber = values["pin"].orEmpty(),
                     )
                 }.onSuccess { done = true }
                     .onFailure { error = (it as? ApiException)?.message ?: "신청하지 못했습니다" }
@@ -235,8 +221,23 @@ fun LoginScreen(
     var signUp by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var pin by remember { mutableStateOf("") }
-    var pin2 by remember { mutableStateOf("") }
     var useEmail by remember { mutableStateOf(false) }
+    val signupValues = remember { mutableStateMapOf<String, String>() }
+    val signupSteps = remember {
+        listOf(
+            Step("name", "이름", "이름을 적어 주세요", hint = "교회에서 부르는 이름 그대로 적어 주세요", maxLen = 30),
+            Step(
+                "pin", "비밀번호", "들어올 때 쓸 숫자 6자리를 정해 주세요",
+                numeric = true, password = true, maxLen = 6,
+                validate = { v, _ -> if (v.length != 6) "숫자 6자리여야 합니다" else null },
+            ),
+            Step(
+                "pin2", "비밀번호 확인", "같은 숫자 6자리를 한 번 더 적어 주세요",
+                numeric = true, password = true, maxLen = 6,
+                validate = { v, all -> if (v != all["pin"]) "위에서 정한 비밀번호와 다릅니다" else null },
+            ),
+        )
+    }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -265,7 +266,28 @@ fun LoginScreen(
         Toggle2("로그인", "처음 왔어요", signUp) { signUp = it; error = "" }
         Spacer(Modifier.height(24.dp))
 
-        if (!signUp && useEmail) {
+        if (signUp) {
+            // ── 가입 신청: 이름 → 비밀번호 → 비밀번호 확인, 한 칸씩 ──────────────
+            StepForm(
+                steps = signupSteps, values = signupValues,
+                finishLabel = "가입 신청하기", busy = busy, serverError = error,
+            ) {
+                error = ""; busy = true
+                scope.launch {
+                    runCatching {
+                        repo.signup(churchId, signupValues["name"].orEmpty().trim(), signupValues["pin"].orEmpty())
+                    }.onSuccess { r ->
+                        pendingMessage = r.message.ifBlank { "승인 후 이용할 수 있습니다." }
+                        signupValues.clear()
+                    }.onFailure { error = it.message ?: "신청하지 못했습니다" }
+                    busy = false
+                }
+            }
+            Spacer(Modifier.height(32.dp))
+            return@Screen
+        }
+
+        if (useEmail) {
             Field(email, { email = it }, "이메일")
             Spacer(Modifier.height(12.dp))
             Field(password, { password = it }, "비밀번호", password = true)
@@ -276,43 +298,21 @@ fun LoginScreen(
                 pin, { pin = it.filter(Char::isDigit).take(6) }, "숫자 6자리 비밀번호",
                 numeric = true, password = true,
             )
-            if (signUp) {
-                Spacer(Modifier.height(12.dp))
-                Field(
-                    pin2, { pin2 = it.filter(Char::isDigit).take(6) }, "비밀번호 다시 입력",
-                    numeric = true, password = true,
-                )
-            }
         }
 
         Spacer(Modifier.height(20.dp))
         Message(error)
         Spacer(Modifier.height(12.dp))
 
-        BigButton(
-            when {
-                busy -> "잠시만 기다려 주세요…"
-                signUp -> "가입 신청하기"
-                else -> "들어가기"
-            },
-            enabled = !busy,
-        ) {
+        BigButton(if (busy) "잠시만 기다려 주세요…" else "들어가기", enabled = !busy) {
             error = ""
             busy = true
             scope.launch {
                 runCatching {
-                    when {
-                        signUp -> {
-                            if (pin.length != 6) throw ApiException("비밀번호는 숫자 6자리여야 합니다")
-                            if (pin != pin2) throw ApiException("비밀번호 두 개가 서로 다릅니다")
-                            val r = repo.signup(churchId, name.trim(), pin)
-                            pendingMessage = r.message.ifBlank { "목사님 승인 후 이용할 수 있습니다." }
-                        }
-                        useEmail -> { repo.loginByEmail(email.trim(), password); onLoggedIn() }
-                        else -> {
-                            if (pin.length != 6) throw ApiException("비밀번호는 숫자 6자리여야 합니다")
-                            repo.login(churchId, name.trim(), pin); onLoggedIn()
-                        }
+                    if (useEmail) { repo.loginByEmail(email.trim(), password); onLoggedIn() }
+                    else {
+                        if (pin.length != 6) throw ApiException("비밀번호는 숫자 6자리여야 합니다")
+                        repo.login(churchId, name.trim(), pin); onLoggedIn()
                     }
                 }.onFailure { error = it.message ?: "들어가지 못했습니다" }
                 busy = false
@@ -326,13 +326,13 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    if (useEmail) "이름과 숫자 비밀번호로 들어가기" else "목사님·관리자는 이메일로 들어가기",
+                    if (useEmail) "이름과 숫자 비밀번호로 들어가기" else "이메일을 등록해 두신 분은 이메일로 들어가기",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                "비밀번호를 잊으셨으면 목사님께 말씀해 주세요.\n새 비밀번호를 만들어 드립니다.",
+                "비밀번호를 잊으셨으면 목사님이나 교회 관리자께 말씀해 주세요.\n새 비밀번호를 만들어 드립니다.",
                 style = MaterialTheme.typography.bodySmall, color = Muted,
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(),
             )

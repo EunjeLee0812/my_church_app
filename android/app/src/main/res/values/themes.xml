@@ -1,7 +1,8 @@
 <resources>
     <style name="Theme.Woori" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#F2F7EC</item>
+        <item name="android:windowBackground">@color/app_bg</item>
+        <item name="android:statusBarColor">#F8F5EF</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">#F2F7EC</item>
+        <item name="android:navigationBarColor">#F8F5EF</item>
     </style>
 </resources>

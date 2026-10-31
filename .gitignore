@@ -8,10 +8,12 @@ android/captures/
 *.iml
 .cxx/
 
-# ── 서명 키 (절대 올리면 안 됨) ──────────────────
+# ── 서명 키 · 비밀 파일 (절대 올리면 안 됨) ──────────
 *.jks
 *.keystore
 keystore.properties
+google-services.json
+*service-account*.json
 
 # ── 서버 ─────────────────────────────────────
 server/node_modules/
@@ -27,3 +29,4 @@ dist/
 # ── 기타 ─────────────────────────────────────
 .DS_Store
 .proj-build.tgz
+.*.tgz

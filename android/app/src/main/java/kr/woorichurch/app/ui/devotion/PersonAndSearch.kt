@@ -2,6 +2,11 @@ package kr.woorichurch.app.ui.devotion
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,6 +26,7 @@ fun PersonScreen(
     memberId: Long,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onEdit: (String) -> Unit,
 ) {
     val repo = state.repo
     var data by remember { mutableStateOf<PersonEntries?>(null) }
@@ -68,6 +74,7 @@ fun PersonScreen(
                     churchName = state.me?.churchName.orEmpty(),
                     showAuthor = false,
                     onDeleted = { reload++ },
+                    onEdit = onEdit,
                 )
                 Spacer(Modifier.height(12.dp))
             }
@@ -121,10 +128,13 @@ fun SearchScreen(
     onBack: () -> Unit,
     onHome: () -> Unit,
     onPerson: (Long) -> Unit,
+    onEdit: (String) -> Unit,
 ) {
     val repo = state.repo
     var query by remember { mutableStateOf("") }
-    var all by remember { mutableStateOf(false) }
+    val merged = state.inAllCells
+    var allPicked by remember { mutableStateOf(false) }
+    val all = merged || allPicked
     var results by remember { mutableStateOf<List<Entry>>(emptyList()) }
     var searching by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -143,10 +153,12 @@ fun SearchScreen(
     Screen("묵상 찾기", onBack = onBack, onHome = onHome) {
         Spacer(Modifier.height(8.dp))
         Field(query, { query = it }, "찾을 말 (두 글자 이상)")
-        Spacer(Modifier.height(12.dp))
-        Toggle2(
-            state.me?.cellName ?: "우리 셀", "전체에서 찾기", all,
-        ) { all = it }
+        if (!merged) {
+            Spacer(Modifier.height(12.dp))
+            Toggle2(
+                state.me?.cellName ?: "우리 셀", "전체에서 찾기", allPicked,
+            ) { allPicked = it }
+        }
 
         Spacer(Modifier.height(20.dp))
         Message(error)
@@ -157,6 +169,7 @@ fun SearchScreen(
                 state = state, entry = e,
                 churchName = state.me?.churchName.orEmpty(),
                 onPerson = onPerson,
+                onEdit = onEdit,
             )
             Spacer(Modifier.height(12.dp))
         }

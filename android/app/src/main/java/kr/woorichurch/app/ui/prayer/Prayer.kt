@@ -2,6 +2,11 @@ package kr.woorichurch.app.ui.prayer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,7 +24,9 @@ fun PrayerScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
     val repo = state.repo
     val scope = rememberCoroutineScope()
     val me = state.me
-    var all by remember { mutableStateOf(false) }
+    val merged = state.inAllCells
+    var allPicked by remember { mutableStateOf(false) }
+    val all = merged || allPicked
     var list by remember { mutableStateOf<List<Prayer>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf("") }
@@ -45,9 +52,10 @@ fun PrayerScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
 
     Screen("기도제목", onBack = onBack, onHome = onHome) {
         Spacer(Modifier.height(8.dp))
-        Toggle2(me?.cellName ?: "우리 셀", "전체 보기", all) { all = it }
-
-        Spacer(Modifier.height(16.dp))
+        if (!merged) {
+            Toggle2(me?.cellName ?: "우리 셀", "전체 보기", allPicked) { allPicked = it }
+            Spacer(Modifier.height(16.dp))
+        }
         if (!writing) {
             BigButton("기도제목 올리기") { writing = true }
         } else {
@@ -55,20 +63,9 @@ fun PrayerScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
                 Field(text, { text = it }, "함께 기도할 제목", singleLine = false, minLines = 4)
                 if (me?.canPickCells == true && cells.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(allCells, { allCells = it }, colors = CheckboxDefaults.colors(checkedColor = Green))
-                        Text("모든 셀에 나누기", style = MaterialTheme.typography.bodyLarge)
-                    }
-                    if (!allCells) cells.forEach { c ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                picked.contains(c.id),
-                                { picked = if (it) picked + c.id else picked - c.id },
-                                colors = CheckboxDefaults.colors(checkedColor = Green),
-                            )
-                            Text(c.name, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
+                    Text("나눌 셀", style = MaterialTheme.typography.bodySmall, color = Muted)
+                    Spacer(Modifier.height(6.dp))
+                    CellChips(cells, picked, { picked = it; allCells = it.size == cells.size })
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -79,7 +76,7 @@ fun PrayerScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
                             runCatching {
                                 repo.savePrayer(
                                     t,
-                                    if (me?.canPickCells == true && !allCells) picked.toList() else null,
+                                    if (me?.canPickCells == true && !allCells && picked.isNotEmpty()) picked.toList() else null,
                                     me?.canPickCells == true && allCells,
                                 )
                             }.onSuccess { text = ""; writing = false; reload++ }

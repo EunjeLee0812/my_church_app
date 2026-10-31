@@ -9,14 +9,14 @@ object Titles {
 }
 
 object Roles {
-    const val OWNER = "owner"    // 담임목사 — 전부 가능
-    const val ADMIN = "admin"    // 목사가 지정한 관리 권한자
+    const val OWNER = "owner"    // 관리자 — 교회를 등록한 분. 담임목사님과 같은 전체 권한 (여러 명 가능)
+    const val ADMIN = "admin"    // 부관리자 — 성도·셀 관리, 가입 승인, 공지·주보
     const val LEADER = "leader"  // 셀장
     const val MEMBER = "member"  // 일반 성도
 
     fun label(role: String) = when (role) {
-        OWNER -> "담임목사"
-        ADMIN -> "관리 권한"
+        OWNER -> "관리자"
+        ADMIN -> "부관리자"
         LEADER -> "셀장"
         else -> "성도"
     }
@@ -53,7 +53,11 @@ object Scopes {
     val role: String = Roles.MEMBER,
     val shareScope: String = Scopes.OWN_CELL,
     val cellId: Long? = null,
+    /** 화면 표시용 짧은 이름 — 예: '2구역', '1구역 외 2', '전체 구역' */
     val cellName: String? = null,
+    /** 속한 구역 이름 전체 */
+    val cellNames: String? = null,
+    val cellIds: List<Long> = emptyList(),
     val zoomUrl: String? = null,
     val mustChangePin: Boolean = false,
     val isPlatformAdmin: Boolean = false,
@@ -101,6 +105,7 @@ object Scopes {
     @SerialName("share_scope") val shareScope: String = Scopes.OWN_CELL,
     @SerialName("cell_id") val cellId: Long? = null,
     @SerialName("cell_name") val cellName: String? = null,
+    val cellIds: List<Long> = emptyList(),
     val status: String = "active",
     @SerialName("created_at") val createdAt: String = "",
 )
@@ -110,8 +115,13 @@ object Scopes {
     val canGrantRole: Boolean = false,
 )
 @Serializable data class ResetPinResult(val ok: Boolean = true, val tempPin: String = "")
+@Serializable data class BatchResult(val ok: Boolean = true, val count: Int = 0)
 
 // ── 묵상 ──────────────────────────────────────────────────────────────────
+@Serializable data class EntryImage(val id: Long, val url: String)
+@Serializable data class ShareLink(val ok: Boolean = true, val url: String = "")
+@Serializable data class UploadImageResult(val ok: Boolean = true, val id: Long = 0, val url: String = "")
+
 @Serializable data class Entry(
     val id: Long,
     val date: String,
@@ -127,6 +137,9 @@ object Scopes {
     @SerialName("like_count") val likeCount: Int = 0,
     @SerialName("liked") val likedRaw: Int = 0,
     @SerialName("comment_count") val commentCount: Int = 0,
+    val images: List<EntryImage> = emptyList(),
+    /** 내 글을 불러올 때만: 이 글을 나눈 셀들 */
+    val cellIds: List<Long> = emptyList(),
 ) {
     val isPublic get() = isPublicRaw == 1
     val liked get() = likedRaw > 0
@@ -234,6 +247,25 @@ object Scopes {
 
 @Serializable data class InviteCode(val inviteCode: String = "")
 
+// ── 알림 ──────────────────────────────────────────────────────────────────
+@Serializable data class PushConfig(
+    val vapidPublicKey: String? = null,
+    val fcmAvailable: Boolean = false,
+    val registered: Boolean = false,
+    val notifyShare: Boolean = true,
+    val notifyBoard: Boolean = true,
+    val notifyAdmin: Boolean = true,
+)
+@Serializable data class AppNotification(
+    val id: Long,
+    val title: String,
+    val body: String,
+    val link: String? = null,
+    @SerialName("read_flag") val readFlag: Int = 0,
+    @SerialName("created_at") val createdAt: String = "",
+)
+@Serializable data class NotificationList(val notifications: List<AppNotification> = emptyList())
+
 // ── 플랫폼 운영자 ───────────────────────────────────────────────────────────
 @Serializable data class ChurchApplication(
     val id: Long, val name: String,
@@ -245,6 +277,7 @@ object Scopes {
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("member_count") val memberCount: Int = 0,
     @SerialName("invited_by_name") val invitedByName: String? = null,
+    @SerialName("applicant_name") val applicantName: String? = null,
 )
 @Serializable data class ChurchApplicationList(val churches: List<ChurchApplication> = emptyList())
 
@@ -256,3 +289,25 @@ object Scopes {
     @SerialName("created_at") val createdAt: String = "",
 )
 @Serializable data class SuggestionList(val suggestions: List<Suggestion> = emptyList())
+
+/** 홈에 필요한 것을 한 번에 받는 응답 — 첫 화면을 빨리 띄우기 위함 */
+@Serializable data class Bootstrap(
+    val me: Me,
+    val home: HomeData = HomeData(),
+    val cells: List<Cell> = emptyList(),
+    val progress: Progress = Progress(),
+)
+
+@Serializable data class ExportEntry(
+    val date: String,
+    val title: String? = null,
+    val body: String = "",
+    @SerialName("member_name") val memberName: String? = null,
+    @SerialName("member_title") val memberTitle: String? = null,
+)
+@Serializable data class ExportData(
+    val scope: String = "mine",
+    val churchName: String = "",
+    val name: String = "",
+    val entries: List<ExportEntry> = emptyList(),
+)

@@ -6,6 +6,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +34,13 @@ import kr.woorichurch.app.util.Launch
 //  공지사항
 // ══════════════════════════════════════════════════════════════════════════
 @Composable
-fun NoticeScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
+fun NoticeScreen(
+    state: AppState,
+    onBack: (() -> Unit)?,
+    onHome: (() -> Unit)?,
+    title: String = "공지사항",
+    header: @Composable ColumnScope.() -> Unit = {},
+) {
     val repo = state.repo
     val scope = rememberCoroutineScope()
     var list by remember { mutableStateOf<List<Notice>>(emptyList()) }
@@ -54,7 +65,8 @@ fun NoticeScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
         list.filter { it.unread }.forEach { runCatching { repo.readNotice(it.id) } }
     }
 
-    Screen("공지사항", onBack = onBack, onHome = onHome) {
+    Screen(title, onBack = onBack, onHome = onHome) {
+        header()
         Spacer(Modifier.height(8.dp))
         if (canEdit) {
             if (!writing) {
@@ -143,7 +155,13 @@ fun NoticeScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
 //  주보 — 올리기(자동 축소) · 보기 · 지난 주보 보관함
 // ══════════════════════════════════════════════════════════════════════════
 @Composable
-fun BulletinScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
+fun BulletinScreen(
+    state: AppState,
+    onBack: (() -> Unit)?,
+    onHome: (() -> Unit)?,
+    title: String = "주보",
+    header: @Composable ColumnScope.() -> Unit = {},
+) {
     val repo = state.repo
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -200,7 +218,8 @@ fun BulletinScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
             .onFailure { error = it.message ?: "주보를 불러오지 못했습니다"; openId = null }
     }
 
-    Screen("주보", onBack = onBack, onHome = onHome) {
+    Screen(title, onBack = onBack, onHome = onHome) {
+        header()
         Spacer(Modifier.height(8.dp))
         if (canEdit) {
             BigButton(if (uploading) "올리는 중…" else "주보 올리기", enabled = !uploading,

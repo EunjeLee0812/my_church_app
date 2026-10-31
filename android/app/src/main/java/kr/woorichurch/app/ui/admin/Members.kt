@@ -4,6 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,11 +19,12 @@ import kr.woorichurch.app.ui.AppState
 import kr.woorichurch.app.ui.common.*
 import kr.woorichurch.app.ui.devotion.PickerBox
 import kr.woorichurch.app.ui.theme.*
+import kr.woorichurch.app.util.D
 
 /**
  * 교회 성도 / 셀 관리 — 버튼 하나로 들어와서 안에서 나뉩니다.
  *  · 직분(호칭)과 권한(앱에서 할 수 있는 일)은 따로입니다.
- *  · 권한 주기와 나눔 범위 바꾸기는 담임목사님만 할 수 있습니다.
+ *  · 권한 주기와 나눔 범위 바꾸기는 관리자(교회를 등록한 분 · 담임목사님)만 할 수 있습니다.
  */
 @Composable
 fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
@@ -37,6 +43,11 @@ fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
     var newCellName by remember { mutableStateOf("") }
     var editingCell by remember { mutableStateOf<Cell?>(null) }
     var confirmDeleteCell by remember { mutableStateOf<Cell?>(null) }
+    var approveCells by remember { mutableStateOf<Map<Long, Set<Long>>>(emptyMap()) }
+    var confirmAll by remember { mutableStateOf(false) }
+    var busyAll by remember { mutableStateOf(false) }
+    val myId = state.me?.id
+    val iAmOwner = state.me?.isOwner == true
 
     LaunchedEffect(reload) {
         loading = true; error = ""
@@ -61,25 +72,53 @@ fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
             val pending = members.filter { it.status == "pending" }
             if (pending.isNotEmpty()) {
                 SectionTitle("승인 기다리는 분 ${pending.size}명", top = 4.dp)
+                if (pending.size > 1) {
+                    BigButton(
+                        if (busyAll) "승인하는 중…" else "${pending.size}명 모두 승인",
+                        tone = ButtonTone.Primary, enabled = !busyAll,
+                        subtitle = "각자 고른 셀로 들어갑니다",
+                    ) { confirmAll = true }
+                    Spacer(Modifier.height(12.dp))
+                }
                 pending.forEach { m ->
-                    Card {
-                        Text("${m.name}", style = MaterialTheme.typography.titleMedium)
+                    Card(padding = 14.dp) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(m.name, style = MaterialTheme.typography.titleMedium)
+                                Text("신청 ${D.shortTime(m.createdAt)}",
+                                    style = MaterialTheme.typography.bodySmall, color = Muted)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        // 셀은 가로 한 줄로 — 옆으로 밀어서 고릅니다 (나중에 정해도 됩니다)
+                        CellChips(
+                            cells, approveCells[m.id] ?: emptySet(),
+                            { approveCells = approveCells + (m.id to it) },
+                        )
                         Spacer(Modifier.height(10.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            BigButton("승인", Modifier.weight(1f)) {
-                                scope.launch {
-                                    runCatching { repo.approveMember(m.id, true) }
-                                        .onSuccess { reload++ }
-                                        .onFailure { error = it.message ?: "승인하지 못했습니다" }
-                                }
-                            }
-                            BigButton("거절", Modifier.weight(1f), tone = ButtonTone.Danger) {
-                                scope.launch {
-                                    runCatching { repo.approveMember(m.id, false) }
-                                        .onSuccess { reload++ }
-                                        .onFailure { error = it.message ?: "거절하지 못했습니다" }
-                                }
-                            }
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        runCatching { repo.approveMember(m.id, false) }
+                                            .onSuccess { reload++ }
+                                            .onFailure { error = it.message ?: "거절하지 못했습니다" }
+                                    }
+                                },
+                                modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                            ) { Text("거절", color = Danger, style = MaterialTheme.typography.labelLarge) }
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        runCatching {
+                                            repo.approveMember(m.id, true, (approveCells[m.id] ?: emptySet()).toList())
+                                        }.onSuccess { reload++ }
+                                            .onFailure { error = it.message ?: "승인하지 못했습니다" }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Green),
+                                modifier = Modifier.weight(2f).heightIn(min = 52.dp),
+                            ) { Text("승인", style = MaterialTheme.typography.labelLarge) }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -92,7 +131,10 @@ fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("${m.name} ${m.title}", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "${m.name} ${m.title}" + if (m.id == myId) " (나)" else "",
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
                                 if (m.status == "inactive") { Spacer(Modifier.width(8.dp)); Pill("중지", Muted) }
                             }
                             Spacer(Modifier.height(4.dp))
@@ -105,7 +147,8 @@ fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
                                 style = MaterialTheme.typography.bodySmall, color = Muted,
                             )
                         }
-                        if (canEdit && m.role != Roles.OWNER) {
+                        // 관리자 계정은 관리자만, 나머지는 관리 권한이 있으면 바꿀 수 있습니다 (본인 포함)
+                        if (canEdit && (m.role != Roles.OWNER || iAmOwner)) {
                             TextButton(onClick = { editing = m }) {
                                 Text("바꾸기", style = MaterialTheme.typography.labelMedium, color = Green)
                             }
@@ -165,11 +208,11 @@ fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
         MemberEditDialog(
             member = m, cells = cells, canGrantRole = canGrantRole,
             onDismiss = { editing = null },
-            onSave = { title, cellId, clearCell, role, scopeValue, status ->
+            onSave = { title, cellIds, role, scopeValue, status ->
                 editing = null
                 scope.launch {
                     runCatching {
-                        repo.updateMember(m.id, title, cellId, clearCell, role, scopeValue, status)
+                        repo.updateMember(m.id, title, cellIds, role, scopeValue, status)
                     }.onSuccess { reload++; notice = "${m.name}님 정보를 바꿨습니다." }
                         .onFailure { error = it.message ?: "바꾸지 못했습니다" }
                 }
@@ -205,6 +248,27 @@ fun MembersScreen(state: AppState, onBack: () -> Unit, onHome: () -> Unit) {
     }
 
     Confirm(
+        show = confirmAll,
+        title = "모두 승인할까요?",
+        message = "기다리는 ${members.count { it.status == "pending" }}명을 한 번에 승인합니다. " +
+            "셀을 고른 분은 그 셀로, 안 고른 분은 셀 없이 들어갑니다.",
+        confirmText = "모두 승인",
+        onConfirm = {
+            confirmAll = false
+            busyAll = true
+            val items = members.filter { it.status == "pending" }
+                .map { it.id to (approveCells[it.id] ?: emptySet()).toList() }
+            scope.launch {
+                runCatching { repo.approveAll(items) }
+                    .onSuccess { notice = "${it.count}명을 승인했습니다."; approveCells = emptyMap(); reload++ }
+                    .onFailure { error = it.message ?: "승인하지 못했습니다" }
+                busyAll = false
+            }
+        },
+        onDismiss = { confirmAll = false },
+    )
+
+    Confirm(
         show = confirmDeleteCell != null,
         title = "${confirmDeleteCell?.name}을(를) 지울까요?",
         message = "이 셀에 속한 분들은 '셀 없음' 이 됩니다. 묵상 글은 그대로 남습니다.",
@@ -226,11 +290,11 @@ private fun MemberEditDialog(
     cells: List<Cell>,
     canGrantRole: Boolean,
     onDismiss: () -> Unit,
-    onSave: (String?, Long?, Boolean, String?, String?, String?) -> Unit,
+    onSave: (String?, List<Long>?, String?, String?, String?) -> Unit,
     onResetPin: () -> Unit,
 ) {
     var title by remember { mutableStateOf(member.title) }
-    var cellId by remember { mutableStateOf(member.cellId) }
+    var picked by remember { mutableStateOf(member.cellIds.toSet()) }
     var role by remember { mutableStateOf(member.role) }
     var shareScope by remember { mutableStateOf(member.shareScope) }
     var status by remember { mutableStateOf(member.status) }
@@ -246,21 +310,27 @@ private fun MemberEditDialog(
                 PickerBox("직분", title, Titles.ALL, { it }) { title = it }
 
                 Spacer(Modifier.height(14.dp))
-                Text("셀", style = MaterialTheme.typography.bodySmall, color = Muted)
+                Text("셀 (여러 개 고를 수 있습니다 · 옆으로 밀기)", style = MaterialTheme.typography.bodySmall, color = Muted)
                 Spacer(Modifier.height(6.dp))
-                val cellOptions = listOf("none") + cells.map { it.id.toString() }
-                PickerBox(
-                    "셀", cellId?.toString() ?: "none", cellOptions,
-                    { key -> if (key == "none") "셀 없음" else cells.firstOrNull { it.id.toString() == key }?.name ?: key },
-                ) { cellId = if (it == "none") null else it.toLongOrNull() }
+                CellChips(cells, picked, { picked = it })
 
                 if (canGrantRole) {
                     Spacer(Modifier.height(14.dp))
-                    Text("권한 (목사님만 바꿀 수 있습니다)", style = MaterialTheme.typography.bodySmall, color = Muted)
+                    Text("권한 (관리자만 바꿀 수 있습니다)", style = MaterialTheme.typography.bodySmall, color = Muted)
                     Spacer(Modifier.height(6.dp))
                     PickerBox(
-                        "권한", role, listOf(Roles.MEMBER, Roles.LEADER, Roles.ADMIN), { Roles.label(it) },
+                        "권한", role, listOf(Roles.MEMBER, Roles.LEADER, Roles.ADMIN, Roles.OWNER), { Roles.label(it) },
                     ) { role = it }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        when (role) {
+                            Roles.OWNER -> "관리자: 담임목사님과 같은 모든 권한 (직분·권한 주기, 가입 승인, 줌 링크)"
+                            Roles.ADMIN -> "부관리자: 성도·셀 관리, 가입 승인, 공지·주보"
+                            Roles.LEADER -> "셀장: 우리 셀 현황 보기"
+                            else -> "성도: 나눔·기도제목·댓글"
+                        },
+                        style = MaterialTheme.typography.bodySmall, color = Muted,
+                    )
 
                     Spacer(Modifier.height(14.dp))
                     Text("나눔 범위", style = MaterialTheme.typography.bodySmall, color = Muted)
@@ -288,10 +358,10 @@ private fun MemberEditDialog(
         },
         confirmButton = {
             TextButton(onClick = {
+                val before = member.cellIds.toSet()
                 onSave(
                     title.takeIf { it != member.title },
-                    cellId.takeIf { it != member.cellId },
-                    cellId == null && member.cellId != null,
+                    picked.toList().takeIf { picked != before },
                     role.takeIf { it != member.role },
                     shareScope.takeIf { it != member.shareScope },
                     status.takeIf { it != member.status },

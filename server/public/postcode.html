@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주소 찾기</title>
+<!--
+  안드로이드 앱의 '교회 주소 찾기' 창이 이 페이지를 띄웁니다.
+  카카오(다음) 우편번호 서비스 — 무료, 키 없이 씁니다.
+  고른 주소는 앱에 WooriApp.onAddress(JSON) 로 넘겨 줍니다.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; }
+  #wrap { position: relative; width: 100%; min-height: 320px; }
+  #err { display: none; padding: 24px; font: 17px/1.6 -apple-system, "Noto Sans KR", sans-serif; color: #A33A28; }
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+<div id="err">주소 검색을 불러오지 못했습니다.<br>인터넷 연결을 확인하시거나, 창을 닫고 ‘직접 적기’를 눌러 주세요.</div>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+  function send(d) {
+    var r = {
+      address: d.roadAddress || d.autoRoadAddress || d.jibunAddress || d.address || '',
+      building: d.buildingName || '',
+      zonecode: d.zonecode || '',
+    };
+    var raw = JSON.stringify(r);
+    if (window.WooriApp && window.WooriApp.onAddress) window.WooriApp.onAddress(raw);
+    else if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'woori-address', data: r }, '*');
+  }
+  // 앱의 웹뷰는 창 크기가 정해지기 전에 이 페이지를 먼저 읽기 시작합니다.
+  // 그때 바로 붙이면 검색창이 높이 0 으로 만들어져 하얀 화면만 보이므로,
+  // 화면 높이가 생긴 뒤에 붙이고, 크기가 바뀌면 높이를 다시 맞춥니다.
+  var wrap = document.getElementById('wrap');
+  var started = false;
+  function fit() { wrap.style.height = Math.max(window.innerHeight, 320) + 'px'; }
+  function start() {
+    if (started) return;
+    if (!window.innerHeight) { setTimeout(start, 100); return; }
+    started = true;
+    fit();
+    try {
+      new daum.Postcode({
+        oncomplete: send,
+        width: '100%',
+        height: '100%',
+      }).embed(wrap, { autoClose: false });
+    } catch (e) {
+      document.getElementById('err').style.display = 'block';
+    }
+  }
+  window.addEventListener('resize', fit);
+  if (typeof daum === 'undefined') document.getElementById('err').style.display = 'block';
+  else start();
+</script>
+</body>
+</html>

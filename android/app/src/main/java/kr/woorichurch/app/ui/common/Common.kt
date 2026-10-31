@@ -22,6 +22,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kr.woorichurch.app.ui.theme.*
 
+/**
+ * 아래 탭이 있는 새 화면 안에 들어간 화면이면 true.
+ * 그때는 바깥 틀이 아래쪽 여백(탭·내비게이션 바)을 챙기므로 위쪽 여백만 둡니다.
+ */
+val LocalInTabs = staticCompositionLocalOf { false }
+
+/** 떠 있는 아래 탭 막대가 차지하는 높이 — 화면 맨 아래 내용이 가려지지 않게 그만큼 여백을 둡니다 */
+val LocalTabBarSpace = staticCompositionLocalOf { 0.dp }
+
 /** 모든 화면의 기본 틀 — 위쪽에 제목, 뒤로가기, 홈으로 */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +43,7 @@ fun Screen(
 ) {
     Scaffold(
         containerColor = Bg,
+        contentWindowInsets = if (LocalInTabs.current) WindowInsets.statusBars else ScaffoldDefaults.contentWindowInsets,
         topBar = {
             TopAppBar(
                 title = { Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1) },
@@ -54,7 +64,7 @@ fun Screen(
     ) { pad ->
         Column(
             Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp).padding(bottom = 32.dp),
+                .padding(horizontal = 16.dp).padding(bottom = 32.dp + LocalTabBarSpace.current),
             content = content,
         )
     }
@@ -96,6 +106,56 @@ fun BigButton(
 }
 
 enum class ButtonTone { Primary, Soft, Plain, Danger }
+
+/**
+ * 가운데 글씨, 양 끝에 작은 화살표.
+ * 날짜·분기를 옮길 때 씁니다 (글자 버튼이 커서 줄바꿈되는 문제를 없앰).
+ */
+@Composable
+fun ArrowNav(
+    label: String,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    nextEnabled: Boolean = true,
+    prevLabel: String = "이전",
+    nextLabel: String = "다음",
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        ArrowButton("‹", prevLabel, true, onPrev)
+        Text(
+            label,
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.weight(1f),
+        )
+        ArrowButton("›", nextLabel, nextEnabled, onNext)
+    }
+}
+
+@Composable
+private fun ArrowButton(glyph: String, desc: String, enabled: Boolean, onClick: () -> Unit) {
+    Surface(
+        color = Surface,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.5.dp, Line),
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.size(52.dp),
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                glyph,
+                style = MaterialTheme.typography.headlineSmall,
+                color = if (enabled) Green else Line,
+            )
+        }
+    }
+}
 
 @Composable
 fun Card(padding: Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {
@@ -205,6 +265,35 @@ fun Confirm(
     )
 }
 
+/** 여러 칸짜리 선택 막대 (우리 구역 / 전체 / 나의 나눔) */
+@Composable
+fun Segments(options: List<Pair<String, String>>, selected: String, onSelect: (String) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(GreenLight, RoundedCornerShape(12.dp)).padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        options.forEach { (key, label) ->
+            val on = key == selected
+            Surface(
+                color = if (on) Green else Color.Transparent,
+                shape = RoundedCornerShape(9.dp),
+                modifier = Modifier.weight(1f),
+                onClick = { onSelect(key) },
+            ) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (on) Color.White else Green,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 2.dp).fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
 /** 두 칸짜리 선택 막대 (우리 셀 / 전체) */
 @Composable
 fun Toggle2(
@@ -240,6 +329,9 @@ fun Pill(text: String, color: Color = Green) {
         Text(
             text, style = MaterialTheme.typography.labelSmall, color = color,
             fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            softWrap = false,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }

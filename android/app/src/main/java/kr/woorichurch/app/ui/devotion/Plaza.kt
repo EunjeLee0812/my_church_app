@@ -11,7 +11,13 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +43,8 @@ fun EntryCard(
     showAuthor: Boolean = true,
     onPerson: ((Long) -> Unit)? = null,
     onDeleted: (() -> Unit)? = null,
+    /** 내 글이면 '고치기' 를 누를 때 그 날짜로 */
+    onEdit: ((String) -> Unit)? = null,
 ) {
     val repo = state.repo
     val scope = rememberCoroutineScope()
@@ -57,8 +65,9 @@ fun EntryCard(
                 Text(
                     "${entry.memberName} ${entry.memberTitle}",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = if (onPerson != null)
-                        Modifier.clickable { onPerson(entry.memberId) } else Modifier,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f, fill = false).then(
+                        if (onPerson != null) Modifier.pressBounce().clickable { onPerson(entry.memberId) } else Modifier),
                 )
                 Spacer(Modifier.width(8.dp))
                 entry.cellName?.let { Pill(it) }
@@ -74,8 +83,15 @@ fun EntryCard(
             Spacer(Modifier.height(10.dp))
             Text(entry.title, style = MaterialTheme.typography.titleLarge)
         }
-        Spacer(Modifier.height(8.dp))
-        Text(entry.body, style = MaterialTheme.typography.bodyLarge)
+        if (entry.body.isNotBlank()) {
+            Spacer(Modifier.height(8.dp))
+            Text(entry.body, style = MaterialTheme.typography.bodyLarge)
+        }
+
+        if (entry.images.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            PhotoStrip(entry.images.map { repo.imageUrl(it.url) })
+        }
 
         Spacer(Modifier.height(14.dp))
         HorizontalDivider(color = Line)
@@ -114,7 +130,16 @@ fun EntryCard(
                     if (!entry.title.isNullOrBlank()) append(entry.title).append("\n\n")
                     append(entry.body)
                 }
-                Launch.shareText(context, text)
+                // 내가 쓴 공개 글은 '링크'로 공유 — 교회 밖 사람도 사진까지 그 글 하나만 볼 수 있습니다.
+                // 다른 분의 글이나 '나만 보기' 글은 예전처럼 글자만 보냅니다.
+                if (mine && entry.isPublic) scope.launch {
+                    runCatching { repo.shareLink(entry.id) }
+                        .onSuccess { url ->
+                            val head = entry.title?.takeIf { it.isNotBlank() } ?: "${entry.memberName}님의 묵상"
+                            Launch.shareText(context, "$churchName 묵상 나눔 · $head\n$url")
+                        }
+                        .onFailure { Launch.shareText(context, text) }
+                } else Launch.shareText(context, text)
             }) {
                 Icon(Icons.Filled.Share, "공유하기", tint = Muted, modifier = Modifier.size(22.dp))
             }
@@ -162,10 +187,20 @@ fun EntryCard(
             }
         }
 
-        if (mine && onDeleted != null) {
+        if (mine && (onDeleted != null || onEdit != null)) {
             Spacer(Modifier.height(6.dp))
-            TextButton(onClick = { confirmDelete = true }) {
-                Text("이 글 지우기", style = MaterialTheme.typography.labelSmall, color = Danger)
+            Row {
+                if (onEdit != null) {
+                    TextButton(onClick = { onEdit(entry.date) }) {
+                        Text("이 글 고치기", style = MaterialTheme.typography.labelMedium, color = Green)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                if (onDeleted != null) {
+                    TextButton(onClick = { confirmDelete = true }) {
+                        Text("이 글 지우기", style = MaterialTheme.typography.labelSmall, color = Danger)
+                    }
+                }
             }
         }
     }
@@ -189,72 +224,88 @@ fun EntryCard(
 @Composable
 fun FeedScreen(
     state: AppState,
-    onBack: () -> Unit,
-    onHome: () -> Unit,
+    onBack: (() -> Unit)?,
+    onHome: (() -> Unit)?,
     onPerson: (Long) -> Unit,
     onAttendance: () -> Unit,
     onSearch: () -> Unit,
+    onEdit: (String) -> Unit,
 ) {
     val repo = state.repo
-    var all by remember { mutableStateOf(false) }
+    // 모든 셀에 속한 분은 '우리 구역'이 곧 '전체'라 나누지 않습니다
+    val merged = state.inAllCells
+    // cell = 우리 구역 나눔 / all = 전체 나눔 / mine = 나의 나눔 모아보기
+    var tab by rememberSaveable { mutableStateOf(if (merged) "all" else "cell") }
     var date by remember { mutableStateOf(D.today()) }
     var entries by remember { mutableStateOf<List<Entry>>(emptyList()) }
+    var myTotal by remember { mutableStateOf(0) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf("") }
     var reload by remember { mutableStateOf(0) }
 
-    LaunchedEffect(all, date, reload) {
+    LaunchedEffect(tab, date, reload) {
         loading = true; error = ""
-        runCatching { repo.feed(date, if (all) "all" else "cell") }
+        runCatching {
+            if (tab == "mine") {
+                val r = repo.personEntries(state.me?.id ?: 0)
+                myTotal = r.total
+                r.entries
+            } else repo.feed(date, tab)
+        }
             .onSuccess { entries = it }
             .onFailure { error = it.message ?: "불러오지 못했습니다" }
         loading = false
+        // 이 화면을 다 띄운 뒤, 다음에 누를 만한 것(출석표·나의 나눔·다른 구역·어제)을 미리 받아 둡니다
+        state.prefetchAround("feed")
     }
 
-    Screen("오늘의 나눔", onBack = onBack, onHome = onHome) {
+    Screen(if (tab == "mine") "나의 나눔" else "오늘의 나눔", onBack = onBack, onHome = onHome) {
         Spacer(Modifier.height(8.dp))
-        Toggle2(
-            state.me?.cellName?.let { "$it 나눔" } ?: "우리 셀 나눔",
-            "전체 나눔 보기", all,
-        ) { all = it }
-
+        Segments(
+            buildList {
+                if (!merged) add("cell" to (state.me?.cellName?.let { "$it" } ?: "우리 구역"))
+                add("all" to "전체 나눔")
+                add("mine" to "나의 나눔")
+            },
+            tab,
+        ) { tab = it }
         Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(
-                onClick = { date = LocalDate.parse(date).minusDays(1).toString() },
-                modifier = Modifier.weight(1f),
-            ) { Text("앞날", style = MaterialTheme.typography.labelMedium) }
-            Text(
-                D.korean(date),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1.4f).align(Alignment.CenterVertically),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-            OutlinedButton(
-                onClick = {
+
+        if (tab != "mine") {
+            ArrowNav(
+                label = D.korean(date),
+                onPrev = { date = LocalDate.parse(date).minusDays(1).toString() },
+                onNext = {
                     val n = LocalDate.parse(date).plusDays(1)
                     if (!n.isAfter(LocalDate.now())) date = n.toString()
                 },
-                modifier = Modifier.weight(1f),
-            ) { Text("다음날", style = MaterialTheme.typography.labelMedium) }
-        }
-
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            BigButton("묵상 출석표 보기", Modifier.weight(1f), tone = ButtonTone.Soft) { onAttendance() }
-            BigButton("묵상 찾기", Modifier.weight(1f), tone = ButtonTone.Soft) { onSearch() }
+                nextEnabled = LocalDate.parse(date).isBefore(LocalDate.now()),
+                prevLabel = "앞날", nextLabel = "다음날",
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                BigButton("묵상 출석표 보기", Modifier.weight(1f), tone = ButtonTone.Soft) { onAttendance() }
+                BigButton("묵상 찾기", Modifier.weight(1f), tone = ButtonTone.Soft) { onSearch() }
+            }
+        } else if (!loading) {
+            Card {
+                Text("지금까지 나눈 묵상", style = MaterialTheme.typography.bodySmall, color = Muted)
+                Text("${myTotal}회", style = MaterialTheme.typography.headlineMedium, color = Green)
+            }
         }
 
         Spacer(Modifier.height(20.dp))
         Message(error)
         if (loading) Loading()
-        else if (entries.isEmpty()) Empty("아직 이 날 나눈 묵상이 없습니다.")
+        else if (entries.isEmpty()) Empty(if (tab == "mine") "아직 나눈 묵상이 없습니다." else "아직 이 날 나눈 묵상이 없습니다.")
         else entries.forEach { e ->
             EntryCard(
                 state = state, entry = e,
                 churchName = state.me?.churchName.orEmpty(),
+                showAuthor = tab != "mine",
                 onPerson = onPerson,
                 onDeleted = { reload++ },
+                onEdit = onEdit,
             )
             Spacer(Modifier.height(12.dp))
         }

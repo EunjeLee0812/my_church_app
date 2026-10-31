@@ -10,17 +10,21 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// 따뜻한 느낌의 연한 연두색 바탕 — 기존 웹앱과 같은 색감
-val Bg = Color(0xFFF2F7EC)
-val Surface = Color(0xFFFFFFFF)
-val Green = Color(0xFF2E5E2E)
-val GreenLight = Color(0xFFDCEBD0)
-val Ink = Color(0xFF1B1B1B)
-val Muted = Color(0xFF5A6152)
-val Line = Color(0xFFCBD8BE)
-val Danger = Color(0xFFA33A28)
-val DotDone = Color(0xFF3A8A3A)
-val DotMiss = Color(0xFF2B2B2B)
+// ── 색 (2026-09 개편) ──────────────────────────────────────────────────────
+// 크림색 바탕 + 따뜻한 베이지 카드 + 딥 그린 포인트.
+// (참고 이미지의 부드러운 크림·베이지 조합에 포인트 색만 딥 그린으로)
+val Bg = Color(0xFFF8F5EF)          // 바탕 — 따뜻한 크림
+val Surface = Color(0xFFFFFDFA)     // 카드 — 거의 흰색, 살짝 따뜻하게
+val SurfaceWarm = Color(0xFFF2ECE3) // 강조 카드 — 연한 베이지
+val Green = Color(0xFF1F4D3A)       // 포인트 — 딥 그린
+val GreenLight = Color(0xFFE4ECE4)  // 연한 딥그린 (버튼 바탕·선택 막대)
+val Ink = Color(0xFF2B2622)         // 글씨 — 따뜻한 먹색
+val Muted = Color(0xFF857B71)       // 보조 글씨 — 따뜻한 회갈색
+val Line = Color(0xFFE6DDD1)        // 테두리 — 베이지
+val Danger = Color(0xFFB0503D)
+val DotDone = Color(0xFF2F6B4F)
+// 안 한 날 — 테두리만 있는 빈 동그라미
+val DotMiss = Color(0xFFC4B9AC)
 
 private val scheme = lightColorScheme(
     primary = Green,
@@ -32,7 +36,7 @@ private val scheme = lightColorScheme(
     onBackground = Ink,
     surface = Surface,
     onSurface = Ink,
-    surfaceVariant = GreenLight,
+    surfaceVariant = SurfaceWarm,
     onSurfaceVariant = Muted,
     outline = Line,
     error = Danger,

@@ -13,5 +13,6 @@ class WooriApp : Application() {
         super.onCreate()
         prefs = Prefs(this)
         repo = Repo(Api(prefs), prefs)
+        kr.woorichurch.app.push.ensureChannel(this)
     }
 }

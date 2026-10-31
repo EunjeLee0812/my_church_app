@@ -5,25 +5,25 @@ export function privacyPage(contactEmail) {
 <html lang="ko"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>우리교회 개인정보처리방침</title>
+<title>모두의 교회 개인정보처리방침</title>
 <style>
   body { font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
          max-width: 720px; margin: 0 auto; padding: 32px 20px 80px;
-         line-height: 1.8; color: #1b1b1b; background: #f2f7ec; }
+         line-height: 1.8; color: #1b1b1b; background: #f8f5ef; }
   h1 { font-size: 26px; margin-bottom: 4px; }
-  h2 { font-size: 19px; margin-top: 36px; border-top: 1px solid #cbd8be; padding-top: 20px; }
-  .date { color: #5a6152; font-size: 14px; }
+  h2 { font-size: 19px; margin-top: 36px; border-top: 1px solid #e6ddd1; padding-top: 20px; }
+  .date { color: #857b71; font-size: 14px; }
   table { border-collapse: collapse; width: 100%; margin: 12px 0; background: #fff; }
-  th, td { border: 1px solid #cbd8be; padding: 10px 12px; text-align: left; font-size: 15px; }
-  th { background: #dcebd0; }
+  th, td { border: 1px solid #e6ddd1; padding: 10px 12px; text-align: left; font-size: 15px; }
+  th { background: #e4ece4; }
   ul { padding-left: 20px; }
-  code { background: #fff; padding: 1px 5px; border: 1px solid #cbd8be; }
+  code { background: #fff; padding: 1px 5px; border: 1px solid #e6ddd1; }
 </style></head><body>
 
 <h1>개인정보처리방침</h1>
-<p class="date">우리교회 앱 · 최종 개정일 ${updated}</p>
+<p class="date">모두의 교회 앱 · 최종 개정일 ${updated}</p>
 
-<p>우리교회 앱(이하 "앱")은 교회 구성원이 묵상을 나누고 교회 소식을 확인하기 위한
+<p>모두의 교회 앱(이하 "앱")은 교회 구성원이 묵상을 나누고 교회 소식을 확인하기 위한
 비영리 목적의 앱입니다. 이용자의 개인정보를 소중히 다루며, 아래와 같이 처리합니다.</p>
 
 <h2>1. 수집하는 항목</h2>
@@ -74,6 +74,8 @@ export function privacyPage(contactEmail) {
 <p>이용자는 언제든지 자신의 정보를 열람·수정할 수 있고(설정 → 개인정보 변경),
 삭제·처리정지를 요청할 수 있습니다. 소속 교회의 담임목사 또는 아래 연락처로
 요청하시면 처리해 드립니다.</p>
+<p><b>계정 삭제</b>는 <a href="/delete-account">계정 삭제 요청 페이지</a>에서
+로그인 없이 바로 신청하실 수 있습니다.</p>
 
 <h2>8. 만 14세 미만 아동</h2>
 <p>앱은 만 14세 미만 아동을 대상으로 하지 않습니다.

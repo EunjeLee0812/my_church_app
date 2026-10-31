@@ -45,6 +45,9 @@ create table if not exists members (
   must_change_pin   integer not null default 0,   -- 초기화된 비밀번호로 들어온 경우
   fail_count   integer not null default 0,
   locked_until text,
+  notify_share integer not null default 1,      -- 나눔·기도제목 알림
+  notify_board integer not null default 1,      -- 공지·주보 알림
+  notify_admin integer not null default 1,      -- 가입 신청 등 관리 알림
   created_at   text not null default (datetime('now'))
 );
 create unique index if not exists members_church_name on members(church_id, name);
@@ -219,3 +222,93 @@ insert or ignore into blocked_keywords(keyword, note) values
   ('이재록',           '만민중앙'),
   ('은혜로교회',       '이단 규정 단체'),
   ('신옥주',           '은혜로교회');
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 한 사람이 여러 셀에 속할 수 있게 (목사·사모는 모든 셀에 걸치기도 합니다)
+-- members.cell_id 는 '대표 셀'(화면 표시용)로 남겨 두고,
+-- 실제 소속은 아래 표가 기준입니다.
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists member_cells (
+  member_id integer not null references members(id) on delete cascade,
+  cell_id   integer not null references cells(id)   on delete cascade,
+  primary key (member_id, cell_id)
+);
+create index if not exists member_cells_cell on member_cells(cell_id);
+
+-- 기존에 한 명당 하나씩 들어 있던 셀을 옮깁니다 (여러 번 실행해도 안전)
+insert or ignore into member_cells(member_id, cell_id)
+  select id, cell_id from members where cell_id is not null;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 알림
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists push_tokens (
+  id         integer primary key autoincrement,
+  member_id  integer not null references members(id) on delete cascade,
+  kind       text not null,          -- 'fcm' (안드로이드 앱) | 'web' (웹앱)
+  token      text not null,          -- fcm 토큰 또는 웹 구독 endpoint
+  created_at text not null default (datetime('now')),
+  last_ok    text
+);
+create unique index if not exists push_tokens_uniq on push_tokens(kind, token);
+create index if not exists push_tokens_member on push_tokens(member_id);
+
+-- 보낸 알림 기록 (웹앱이 내용을 받아 가기 위해서도 씁니다)
+create table if not exists notifications (
+  id         integer primary key autoincrement,
+  member_id  integer not null references members(id) on delete cascade,
+  title      text not null,
+  body       text not null,
+  link       text,
+  read_flag  integer not null default 0,
+  created_at text not null default (datetime('now'))
+);
+create index if not exists notifications_member on notifications(member_id, created_at desc);
+
+-- 계정 삭제 요청 (Play 스토어 요구사항 — 로그인 없이 신청할 수 있어야 합니다)
+create table if not exists deletion_requests (
+  id          integer primary key autoincrement,
+  church_name text,
+  member_name text not null,
+  contact     text,
+  note        text,
+  status      text not null default 'pending',   -- pending / done / rejected
+  created_at  text not null default (datetime('now')),
+  handled_at  text
+);
+create index if not exists deletion_requests_new on deletion_requests(status, created_at desc);
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 묵상 나눔 사진 (2026-09 추가)
+--   사진 파일은 R2 에, 여기에는 어느 글에 붙은 사진인지만 적습니다.
+--   token 은 추측할 수 없는 긴 난수라 /img/<token> 주소로 바로 보여 줍니다.
+--   entry_id 가 비어 있으면 '올렸지만 아직 글에 붙지 않은' 사진입니다.
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists entry_images (
+  id         integer primary key autoincrement,
+  church_id  integer not null,
+  member_id  integer not null references members(id) on delete cascade,
+  entry_id   integer references entries(id) on delete cascade,
+  token      text not null,
+  r2_key     text not null,
+  mime       text not null,
+  size       integer not null,
+  sort       integer not null default 0,
+  created_at text not null default (datetime('now'))
+);
+create unique index if not exists entry_images_token on entry_images(token);
+create index if not exists entry_images_entry on entry_images(entry_id, sort);
+create index if not exists entry_images_member on entry_images(member_id, entry_id);
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 묵상 공유 링크 (2026-09 추가)
+--   /s/<token> 주소로 교회 밖 사람도 그 글 하나만 볼 수 있습니다.
+--   글이 지워지거나 '나만 보기'로 바뀌면 링크도 더 이상 보이지 않습니다.
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists entry_shares (
+  entry_id   integer primary key references entries(id) on delete cascade,
+  token      text not null,
+  member_id  integer not null,
+  created_at text not null default (datetime('now'))
+);
+create unique index if not exists entry_shares_token on entry_shares(token);

@@ -147,6 +147,58 @@ object ImageShrink {
         return out.toByteArray() to "image/jpeg"
     }
 
+    /**
+     * 묵상 나눔 사진용 — 폰 사진(보통 3~8MB)을 화면에서 보기 충분한 크기로 줄입니다.
+     * 긴 변 1600px, JPEG, 대략 300KB~1MB. 세로로 찍은 사진이 눕지 않도록 회전 정보도 반영합니다.
+     */
+    fun forPost(
+        context: Context,
+        uri: Uri,
+        maxSide: Int = 1600,
+        maxBytes: Int = 1024 * 1024,
+    ): ByteArray? {
+        val raw = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(raw, 0, raw.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxSide) sample *= 2
+        val bmp = BitmapFactory.decodeByteArray(raw, 0, raw.size, BitmapFactory.Options().apply {
+            inSampleSize = sample
+        }) ?: return null
+
+        // 사진의 회전 정보 (카메라로 세로로 찍으면 대부분 90도로 저장됩니다)
+        val degrees = runCatching {
+            when (android.media.ExifInterface(raw.inputStream())
+                .getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, 1)) {
+                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        }.getOrDefault(0f)
+
+        val scale = minOf(1f, maxSide.toFloat() / maxOf(bmp.width, bmp.height))
+        val m = android.graphics.Matrix().apply {
+            if (scale < 1f) postScale(scale, scale)
+            if (degrees != 0f) postRotate(degrees)
+        }
+        val out = if (scale < 1f || degrees != 0f)
+            Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true) else bmp
+
+        var quality = 82
+        var bytes: ByteArray
+        while (true) {
+            val o = ByteArrayOutputStream()
+            out.compress(Bitmap.CompressFormat.JPEG, quality, o)
+            bytes = o.toByteArray()
+            if (bytes.size <= maxBytes || quality <= 50) break
+            quality -= 8
+        }
+        return bytes
+    }
+
     fun humanSize(bytes: Long): String = when {
         bytes >= 1024 * 1024 -> String.format("%.1fMB", bytes / 1024.0 / 1024.0)
         bytes >= 1024 -> "${bytes / 1024}KB"

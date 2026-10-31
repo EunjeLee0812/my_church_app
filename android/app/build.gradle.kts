@@ -14,15 +14,20 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Firebase 설정 파일(app/google-services.json)이 있을 때만 알림 기능이 켜집니다.
+// 파일이 없어도 앱은 정상적으로 빌드되고 돌아갑니다 (알림만 동작하지 않음).
+val firebaseReady = file("google-services.json").exists()
+if (firebaseReady) apply(plugin = "com.google.gms.google-services")
+
 android {
     namespace = "kr.woorichurch.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "kr.woorichurch.app"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
+        targetSdk = 36
+        versionCode = 4
         versionName = "1.0"
 
         // ─────────────────────────────────────────────────────────────
@@ -30,6 +35,7 @@ android {
         //   예) https://woori-church.내계정이름.workers.dev
         // ─────────────────────────────────────────────────────────────
         buildConfigField("String", "API_BASE", "\"https://woori-church.lej0812.workers.dev\"")
+        buildConfigField("boolean", "FIREBASE_READY", firebaseReady.toString())
     }
 
     signingConfigs {
@@ -87,9 +93,16 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+    // 권한 요청(ActivityResult) 이 요구하는 최소 버전을 맞추기 위해 명시합니다
+    implementation(libs.androidx.fragment)
 
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
+
+    // 알림 (Firebase Cloud Messaging)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.coroutines.play.services)
 }

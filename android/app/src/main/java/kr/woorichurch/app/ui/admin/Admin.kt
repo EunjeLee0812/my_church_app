@@ -2,6 +2,11 @@ package kr.woorichurch.app.ui.admin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import kr.woorichurch.app.ui.common.Button
+import kr.woorichurch.app.ui.common.IconButton
+import kr.woorichurch.app.ui.common.OutlinedButton
+import kr.woorichurch.app.ui.common.Surface
+import kr.woorichurch.app.ui.common.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,75 +20,6 @@ import kr.woorichurch.app.ui.devotion.PickerBox
 import kr.woorichurch.app.ui.theme.*
 import kr.woorichurch.app.util.D
 import kr.woorichurch.app.util.Launch
-
-// ══════════════════════════════════════════════════════════════════════════
-//  가입 신청 승인
-// ══════════════════════════════════════════════════════════════════════════
-@Composable
-fun ApprovalsScreen(state: AppState, onBack: () -> Unit) {
-    val repo = state.repo
-    val scope = rememberCoroutineScope()
-    var members by remember { mutableStateOf<List<Member>>(emptyList()) }
-    var cells by remember { mutableStateOf<List<Cell>>(emptyList()) }
-    var picked by remember { mutableStateOf<Map<Long, Long?>>(emptyMap()) }
-    var loading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf("") }
-    var reload by remember { mutableStateOf(0) }
-
-    LaunchedEffect(reload) {
-        loading = true; error = ""
-        runCatching { repo.members() }
-            .onSuccess { members = it.members.filter { m -> m.status == "pending" } }
-            .onFailure { error = it.message ?: "불러오지 못했습니다" }
-        cells = runCatching { repo.cells() }.getOrDefault(emptyList())
-        loading = false
-    }
-
-    Screen("가입 신청 승인", onBack = onBack) {
-        Spacer(Modifier.height(8.dp))
-        Message(error)
-        if (loading) { Loading(); return@Screen }
-        if (members.isEmpty()) { Empty("승인을 기다리는 신청이 없습니다."); return@Screen }
-
-        Text(
-            "승인할 때 셀을 함께 정해 두시면 바로 나눔을 할 수 있습니다.",
-            style = MaterialTheme.typography.bodySmall, color = Muted,
-        )
-        Spacer(Modifier.height(16.dp))
-
-        members.forEach { m ->
-            Card {
-                Text(m.name, style = MaterialTheme.typography.titleLarge)
-                Text("신청 ${D.shortTime(m.createdAt)}", style = MaterialTheme.typography.bodySmall, color = Muted)
-                Spacer(Modifier.height(12.dp))
-                val opts = listOf("none") + cells.map { it.id.toString() }
-                PickerBox(
-                    "들어갈 셀", picked[m.id]?.toString() ?: "none", opts,
-                    { k -> if (k == "none") "나중에 정하기" else cells.firstOrNull { it.id.toString() == k }?.name ?: k },
-                ) { picked = picked + (m.id to if (it == "none") null else it.toLongOrNull()) }
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    BigButton("승인", Modifier.weight(1f)) {
-                        scope.launch {
-                            runCatching { repo.approveMember(m.id, true, picked[m.id]) }
-                                .onSuccess { reload++ }
-                                .onFailure { error = it.message ?: "승인하지 못했습니다" }
-                        }
-                    }
-                    BigButton("거절", Modifier.weight(1f), tone = ButtonTone.Danger) {
-                        scope.launch {
-                            runCatching { repo.approveMember(m.id, false) }
-                                .onSuccess { reload++ }
-                                .onFailure { error = it.message ?: "거절하지 못했습니다" }
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-        Spacer(Modifier.height(24.dp))
-    }
-}
 
 // ══════════════════════════════════════════════════════════════════════════
 //  직분 · 셀 변경 기록
@@ -105,7 +41,7 @@ fun AuditScreen(state: AppState, onBack: () -> Unit) {
     Screen("변경 기록", onBack = onBack) {
         Spacer(Modifier.height(8.dp))
         Text(
-            "누가 언제 무엇을 바꿨는지 남겨 둡니다. 목사님과 관리 권한자만 볼 수 있습니다.",
+            "누가 언제 무엇을 바꿨는지 남겨 둡니다. 관리자와 부관리자만 볼 수 있습니다.",
             style = MaterialTheme.typography.bodySmall, color = Muted,
         )
         Spacer(Modifier.height(16.dp))
@@ -150,7 +86,12 @@ fun CellStatusScreen(state: AppState, onBack: () -> Unit) {
     var error by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        if (state.me?.canManage == true) cells = runCatching { repo.cells() }.getOrDefault(emptyList())
+        cells = when {
+            state.me?.canManage == true -> runCatching { repo.cells() }.getOrDefault(emptyList())
+            (state.me?.cellIds?.size ?: 0) > 1 ->
+                runCatching { repo.cells().filter { state.me!!.cellIds.contains(it.id) } }.getOrDefault(emptyList())
+            else -> emptyList()
+        }
     }
     LaunchedEffect(cellId) {
         loading = true; error = ""
@@ -309,7 +250,8 @@ fun PlatformScreen(state: AppState, onBack: () -> Unit) {
                 Spacer(Modifier.height(10.dp))
                 listOf(
                     "주소" to c.address, "전화" to c.phone, "교단" to c.denomination,
-                    "담임목사" to c.pastorName, "신학교/안수" to c.seminary,
+                    "담임목사" to c.pastorName, "신청하신 분" to c.applicantName,
+                    "신학교/안수" to c.seminary,
                     "홈페이지" to c.homepage, "남긴 말" to c.note,
                 ).forEach { (k, v) ->
                     if (!v.isNullOrBlank()) {
